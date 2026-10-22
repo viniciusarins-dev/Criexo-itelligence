@@ -35,7 +35,7 @@ Legenda de garantia: **BD** = banco (constraint, função, RLS) · **Domínio** 
 | DP-22 | Coordenadas do ponto de referência: **-26.28300, -48.877018** (Joinville–SC) | Inserir em Configurações → Região |
 | DP-23 | "Peça pequena" = até **8 cm em cada lado** | Capacidade → limite 8, unidade "cm em cada lado" |
 | DP-24 | As faixas de tempo de impressão são **por peça** | Capacidade → "por peça" |
-| DP-25 | A impressora fica ligada **só no horário de trabalho**; as **30 h por semana** são tempo de trabalho do Christian (preparar, acabar, atender, entregar), não tempo de impressora | Capacidade → "Horas de trabalho por semana" = 30 e "A impressora fica ligada" = só no horário de trabalho |
+| DP-25 | A impressora fica ligada **só no horário de trabalho, das 08:00 às 17:30 (≈ 9,5 h por dia)**; parte desse tempo às vezes vai para testes de treino. As **30 h por semana** são tempo de trabalho do Christian (preparar, acabar, atender, entregar), não tempo de impressora | Capacidade → "Horas de trabalho por semana" = 30, "A impressora fica ligada" = só no horário de trabalho, "Horas por dia com a impressora ligada" = 9,5; testes de treino nas observações |
 | DP-05 | Estrelas 0–19…80–100 aprovadas | `scoring_configs` v2 |
 | DP-06 | Qualificada a partir de **60** (4 estrelas) | `scoring_configs` v2 |
 | DP-07 | Dados ausentes: nota sobre o que é conhecido + aviso + faixa | Motor de pontuação |

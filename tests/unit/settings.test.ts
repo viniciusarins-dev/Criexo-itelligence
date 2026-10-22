@@ -44,6 +44,7 @@ const christian: ProductionSettings = {
   modeling: "simple_only",
   weeklyWorkHours: 30,
   printerSchedule: "work_hours",
+  printerHoursPerDay: 9.5,
   standardLeadTimeDays: 3,
   customProjectsRequireEvaluation: true,
   throughput: {
@@ -65,13 +66,17 @@ describe("capacidade produtiva", () => {
   });
 
   it("lê versões gravadas antes do campo de horário da impressora", () => {
-    const { printerSchedule: _omit, ...older } = christian;
-    void _omit;
-    expect(productionSettingsSchema.parse(older).printerSchedule).toBeNull();
+    const { printerSchedule: _schedule, printerHoursPerDay: _hours, ...older } = christian;
+    void _schedule;
+    void _hours;
+    const parsed = productionSettingsSchema.parse(older);
+    expect(parsed.printerSchedule).toBeNull();
+    expect(parsed.printerHoursPerDay).toBeNull();
   });
 
   it("rejeita valores impossíveis", () => {
     expect(productionSettingsSchema.safeParse({ ...christian, weeklyWorkHours: 200 }).success).toBe(false);
+    expect(productionSettingsSchema.safeParse({ ...christian, printerHoursPerDay: 25 }).success).toBe(false);
     expect(
       productionSettingsSchema.safeParse({ ...christian, printer: { model: "", buildVolumeCm: null } }).success,
     ).toBe(false);

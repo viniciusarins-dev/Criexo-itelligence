@@ -58,6 +58,8 @@ export const productionSettingsSchema = z.object({
   weeklyWorkHours: z.number().positive().max(168).nullable(),
   /** Quando a impressora fica ligada. `null` = a confirmar. */
   printerSchedule: z.enum(PRINTER_SCHEDULES).nullable().default(null),
+  /** Horas por dia em que a impressora costuma ficar ligada. `null` = a confirmar. */
+  printerHoursPerDay: z.number().positive().max(24).nullable().default(null),
   standardLeadTimeDays: z.number().int().positive().max(365).nullable(),
   /** Projetos criados do zero têm prazo avaliado caso a caso. */
   customProjectsRequireEvaluation: z.boolean(),
@@ -91,6 +93,7 @@ export function pendingProductionItems(settings: ProductionSettings): string[] {
   if (settings.modeling === null) pending.push("Modelagem 3D");
   if (settings.weeklyWorkHours === null) pending.push("Horas de trabalho por semana");
   if (settings.printerSchedule === null) pending.push("Quando a impressora fica ligada");
+  if (settings.printerHoursPerDay === null) pending.push("Horas por dia com a impressora ligada");
   if (settings.standardLeadTimeDays === null) pending.push("Prazo padrão de entrega");
   const { smallPartLimit, printTimeBasis, smallPartsPerDay } = settings.throughput;
   if (smallPartLimit.value === null || smallPartLimit.unit === null) pending.push("Unidade do limite de peça pequena");

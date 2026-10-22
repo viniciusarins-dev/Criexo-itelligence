@@ -66,6 +66,7 @@ test.describe("configurações — administrador", () => {
     await section.getByLabel("Prazo padrão de entrega (dias)").fill("3");
     await section.getByLabel("Modelagem 3D").selectOption("simple_only");
     await section.getByLabel("A impressora fica ligada").selectOption("");
+    await section.getByLabel("Horas por dia com a impressora ligada").fill("9,5");
     await section.getByLabel("Limite de peça pequena").fill("8");
     await section.getByLabel("Unidade do limite").selectOption("");
     await section.getByLabel("O tempo de impressão é contado").selectOption("");
@@ -83,6 +84,7 @@ test.describe("configurações — administrador", () => {
     ).toBeVisible();
     await expect(reloaded.getByLabel("Horas de trabalho por semana")).toHaveValue(hours);
     await expect(reloaded.getByLabel("PLA")).toBeChecked();
+    await expect(reloaded.getByLabel("Horas por dia com a impressora ligada")).toHaveValue("9.5");
 
     // Valor inválido é recusado pelo servidor.
     await reloaded.getByLabel("Horas de trabalho por semana").fill("500");

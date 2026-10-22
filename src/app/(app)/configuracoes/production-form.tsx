@@ -114,6 +114,19 @@ export function ProductionForm({ current }: { current: ProductionSettings | null
             ))}
           </NativeSelect>
         </Field>
+        <Field
+          label="Horas por dia com a impressora ligada"
+          htmlFor="printerHoursPerDay"
+          error={e.printerHoursPerDay}
+          hint="Ex.: 9,5 para 08:00 às 17:30."
+        >
+          <Input
+            {...fieldA11y("printerHoursPerDay", e.printerHoursPerDay, true)}
+            name="printerHoursPerDay"
+            inputMode="decimal"
+            defaultValue={pick(v, "printerHoursPerDay", current?.printerHoursPerDay)}
+          />
+        </Field>
         <Field label="Modelagem 3D" htmlFor="modeling">
           <NativeSelect id="modeling" name="modeling" defaultValue={pick(v, "modeling", current?.modeling)}>
             <option value="">A confirmar</option>

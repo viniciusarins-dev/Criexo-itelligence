@@ -115,6 +115,7 @@ export async function saveProduction(_previous: ActionState, formData: FormData)
     modeling: readEnumOrNull(formData, "modeling", MODELING_LEVELS),
     weeklyWorkHours: readNumberOrNull(formData, "weeklyWorkHours"),
     printerSchedule: readEnumOrNull(formData, "printerSchedule", PRINTER_SCHEDULES),
+    printerHoursPerDay: readNumberOrNull(formData, "printerHoursPerDay"),
     standardLeadTimeDays: readNumberOrNull(formData, "standardLeadTimeDays"),
     customProjectsRequireEvaluation: readChecked(formData, "customProjectsRequireEvaluation"),
     throughput: {
