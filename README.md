@@ -74,10 +74,12 @@ Christian e Vinicius são administradores (DP-13).
 
 ### Primeira configuração
 
-Em **Configurações**, preencha a região (Rua Landman, 147 + coordenadas,
-raio de 10 km) e a capacidade produtiva com os valores aprovados em
-`docs/REGRAS_DE_NEGOCIO.md`. Itens ambíguos (DP-22 a DP-25) podem ficar
-"a confirmar".
+Em **Configurações**, preencha:
+
+- **Região:** Rua Landman, 147, Joinville–SC · coordenadas
+  `-26.28300, -48.877018` · raio de 10 km.
+- **Capacidade produtiva:** os valores aprovados em
+  `docs/REGRAS_DE_NEGOCIO.md` (DP-03, DP-23 a DP-25).
 
 ### Tipos do banco
 
@@ -150,7 +152,7 @@ provedores.
 ## Limitações conhecidas
 
 - Apenas tema escuro (decisão DP-19).
-- Logotipo provisório até o envio do arquivo oficial.
+- Logotipo em baixa resolução (extraído de uma imagem) até o envio do arquivo original.
 - Projetos Supabase do plano gratuito podem ser pausados por inatividade e
   têm recursos de backup limitados — verificar o plano antes de usar em
   produção (DP-21).

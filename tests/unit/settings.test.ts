@@ -42,12 +42,13 @@ const christian: ProductionSettings = {
   materials: ["PLA"],
   modularAssembly: true,
   modeling: "simple_only",
-  weeklyProductionHours: 30,
+  weeklyWorkHours: 30,
+  printerSchedule: "work_hours",
   standardLeadTimeDays: 3,
   customProjectsRequireEvaluation: true,
   throughput: {
-    smallPartLimit: { value: 8, unit: null },
-    printTimeBasis: null,
+    smallPartLimit: { value: 8, unit: "cm_per_side" },
+    printTimeBasis: "per_part",
     smallPartsPerDay: { under_1h: 32, "1_to_5h": 16, "5h_or_more": 12 },
     largePartsOnePerPrint: true,
   },
@@ -57,14 +58,20 @@ const christian: ProductionSettings = {
 describe("capacidade produtiva", () => {
   it("aceita as respostas do Christian e aponta o que falta confirmar", () => {
     expect(productionSettingsSchema.parse(christian)).toEqual(christian);
-    expect(pendingProductionItems(christian)).toEqual([
-      "Unidade do limite de peça pequena",
-      "Tempo de impressão: por peça ou por mesa",
-    ]);
+    expect(pendingProductionItems(christian)).toEqual([]);
+    expect(
+      pendingProductionItems({ ...christian, printerSchedule: null, throughput: { ...christian.throughput, printTimeBasis: null } }),
+    ).toEqual(["Quando a impressora fica ligada", "Tempo de impressão: por peça ou por mesa"]);
+  });
+
+  it("lê versões gravadas antes do campo de horário da impressora", () => {
+    const { printerSchedule: _omit, ...older } = christian;
+    void _omit;
+    expect(productionSettingsSchema.parse(older).printerSchedule).toBeNull();
   });
 
   it("rejeita valores impossíveis", () => {
-    expect(productionSettingsSchema.safeParse({ ...christian, weeklyProductionHours: 200 }).success).toBe(false);
+    expect(productionSettingsSchema.safeParse({ ...christian, weeklyWorkHours: 200 }).success).toBe(false);
     expect(
       productionSettingsSchema.safeParse({ ...christian, printer: { model: "", buildVolumeCm: null } }).success,
     ).toBe(false);

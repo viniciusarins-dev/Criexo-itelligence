@@ -8,6 +8,7 @@ import {
   MODELING_LEVELS,
   PRINT_TIME_BANDS,
   PRINT_TIME_BASES,
+  PRINTER_SCHEDULES,
   productionSettingsSchema,
   SIZE_UNITS,
 } from "@/domain/settings/production";
@@ -112,7 +113,8 @@ export async function saveProduction(_previous: ActionState, formData: FormData)
     materials: [...new Set([...formData.getAll("materials").map(String), ...extraMaterials])],
     modularAssembly: readChecked(formData, "modularAssembly"),
     modeling: readEnumOrNull(formData, "modeling", MODELING_LEVELS),
-    weeklyProductionHours: readNumberOrNull(formData, "weeklyProductionHours"),
+    weeklyWorkHours: readNumberOrNull(formData, "weeklyWorkHours"),
+    printerSchedule: readEnumOrNull(formData, "printerSchedule", PRINTER_SCHEDULES),
     standardLeadTimeDays: readNumberOrNull(formData, "standardLeadTimeDays"),
     customProjectsRequireEvaluation: readChecked(formData, "customProjectsRequireEvaluation"),
     throughput: {

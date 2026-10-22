@@ -62,9 +62,10 @@ test.describe("configurações — administrador", () => {
     await section.getByLabel("Profundidade (cm)").fill("18");
     await section.getByLabel("Altura (cm)").fill("18");
     await section.getByLabel("PLA").check();
-    await section.getByLabel("Horas de produção por semana").fill(hours);
+    await section.getByLabel("Horas de trabalho por semana").fill(hours);
     await section.getByLabel("Prazo padrão de entrega (dias)").fill("3");
     await section.getByLabel("Modelagem 3D").selectOption("simple_only");
+    await section.getByLabel("A impressora fica ligada").selectOption("");
     await section.getByLabel("Limite de peça pequena").fill("8");
     await section.getByLabel("Unidade do limite").selectOption("");
     await section.getByLabel("O tempo de impressão é contado").selectOption("");
@@ -76,16 +77,18 @@ test.describe("configurações — administrador", () => {
 
     await page.reload();
     const reloaded = page.locator("#capacidade");
-    await expect(reloaded.getByText("2 a confirmar")).toBeVisible();
-    await expect(reloaded.getByText("Unidade do limite de peça pequena · Tempo de impressão: por peça ou por mesa")).toBeVisible();
-    await expect(reloaded.getByLabel("Horas de produção por semana")).toHaveValue(hours);
+    await expect(reloaded.getByText("3 a confirmar")).toBeVisible();
+    await expect(
+      reloaded.getByText("Quando a impressora fica ligada · Unidade do limite de peça pequena · Tempo de impressão: por peça ou por mesa"),
+    ).toBeVisible();
+    await expect(reloaded.getByLabel("Horas de trabalho por semana")).toHaveValue(hours);
     await expect(reloaded.getByLabel("PLA")).toBeChecked();
 
     // Valor inválido é recusado pelo servidor.
-    await reloaded.getByLabel("Horas de produção por semana").fill("500");
+    await reloaded.getByLabel("Horas de trabalho por semana").fill("500");
     await reloaded.getByRole("button", { name: "Salvar capacidade" }).click();
     await expect(page.getByText("Revise os campos destacados.")).toBeVisible();
-    await expect(reloaded.getByLabel("Horas de produção por semana")).toHaveValue("500");
+    await expect(reloaded.getByLabel("Horas de trabalho por semana")).toHaveValue("500");
     await expect(reloaded.getByLabel("Modelo da impressora")).toHaveValue("Impressora de teste");
   });
 

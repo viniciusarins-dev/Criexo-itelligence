@@ -16,6 +16,8 @@ import {
   PRINT_TIME_BASES,
   PRINT_TIME_BASIS_LABELS,
   PRINT_TIME_LABELS,
+  PRINTER_SCHEDULE_LABELS,
+  PRINTER_SCHEDULES,
   SIZE_UNIT_LABELS,
   SIZE_UNITS,
   type ProductionSettings,
@@ -89,13 +91,28 @@ export function ProductionForm({ current }: { current: ProductionSettings | null
         </Field>
       </fieldset>
 
-      <fieldset className="grid gap-5 md:grid-cols-3">
+      <fieldset className="grid gap-5 md:grid-cols-2">
         <SectionTitle>Tempo e prazos</SectionTitle>
-        <Field label="Horas de produção por semana" htmlFor="weeklyProductionHours" error={e.weeklyProductionHours}>
-          <Input {...fieldA11y("weeklyProductionHours", e.weeklyProductionHours)} name="weeklyProductionHours" inputMode="decimal" defaultValue={pick(v, "weeklyProductionHours", current?.weeklyProductionHours)} />
+        <Field
+          label="Horas de trabalho por semana"
+          htmlFor="weeklyWorkHours"
+          error={e.weeklyWorkHours}
+          hint="Preparar, acabar, atender e entregar. Não é o tempo da impressora."
+        >
+          <Input {...fieldA11y("weeklyWorkHours", e.weeklyWorkHours, true)} name="weeklyWorkHours" inputMode="decimal" defaultValue={pick(v, "weeklyWorkHours", current?.weeklyWorkHours)} />
         </Field>
         <Field label="Prazo padrão de entrega (dias)" htmlFor="standardLeadTimeDays" error={e.standardLeadTimeDays}>
           <Input {...fieldA11y("standardLeadTimeDays", e.standardLeadTimeDays)} name="standardLeadTimeDays" inputMode="numeric" defaultValue={pick(v, "standardLeadTimeDays", current?.standardLeadTimeDays)} />
+        </Field>
+        <Field label="A impressora fica ligada" htmlFor="printerSchedule">
+          <NativeSelect id="printerSchedule" name="printerSchedule" defaultValue={pick(v, "printerSchedule", current?.printerSchedule)}>
+            <option value="">A confirmar</option>
+            {PRINTER_SCHEDULES.map((schedule) => (
+              <option key={schedule} value={schedule}>
+                {PRINTER_SCHEDULE_LABELS[schedule]}
+              </option>
+            ))}
+          </NativeSelect>
         </Field>
         <Field label="Modelagem 3D" htmlFor="modeling">
           <NativeSelect id="modeling" name="modeling" defaultValue={pick(v, "modeling", current?.modeling)}>
@@ -112,7 +129,7 @@ export function ProductionForm({ current }: { current: ProductionSettings | null
           name="customProjectsRequireEvaluation"
           defaultChecked={pickChecked(v, "customProjectsRequireEvaluation", current?.customProjectsRequireEvaluation ?? false)}
           label="Projetos criados do zero têm prazo avaliado caso a caso"
-          className="md:col-span-3"
+          className="md:col-span-2"
         />
       </fieldset>
 

@@ -118,3 +118,22 @@
 - Avaliador de viabilidade: depende dos requisitos de cada ideia de produto
   (tamanho, material, quantidade, prazo), que entram na etapa 5.
 - Levantar opções e preços de fontes de dados e IA (DP-15, DP-16).
+
+## Ajustes após os esclarecimentos do Christian (22/10/2026)
+
+- Registradas as respostas DP-18 e DP-22 a DP-25. Nova inconsistência DP-26
+  (quantidades por dia × tempo por peça × horário da impressora).
+- Capacidade: o campo de horas passou a ser **horas de trabalho por semana**
+  (`weeklyWorkHours`), e foi criado **quando a impressora fica ligada**
+  (`printerSchedule`). Versões já gravadas sem esse campo continuam válidas
+  (lidas como "a confirmar").
+- Logotipo: símbolo extraído da imagem recebida (fundo preto removido),
+  aplicado no menu, no login e no ícone da aba. Sem arquivo original ainda.
+- Caveman: um teste do hook feito fora do repositório tinha gravado o modo
+  "caveman" como estado global da máquina, e a sessão retomada o herdou.
+  Os arquivos de teste foram removidos; o repositório continua em modo manual.
+
+### Testes executados
+- `npm run typecheck`, `npm run lint` — sem erros.
+- Vitest — 69 testes passando (54 unitários + 15 de integração), banco recriado.
+- Playwright — 24 testes passando. `npm run build` — sucesso.

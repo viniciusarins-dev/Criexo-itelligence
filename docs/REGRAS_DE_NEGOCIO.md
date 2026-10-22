@@ -27,10 +27,15 @@ Legenda de garantia: **BD** = banco (constraint, função, RLS) · **Domínio** 
 
 | DP | Decisão | Onde está aplicada |
 |----|---------|--------------------|
-| DP-01 | Distância medida a partir do endereço da impressora: **Rua Landman, 147** | Inserir em Configurações → Região (coordenadas pendentes: DP-22) |
+| DP-01 | Distância medida a partir do endereço da impressora: **Rua Landman, 147, Joinville–SC** | Inserir em Configurações → Região |
 | DP-02 | Raio de atuação: **10 km** | Inserir em Configurações → Região |
-| DP-03 | Capacidade: Bambu A1 Mini, área 18 × 18 × 18 cm, peças maiores possíveis em módulos com encaixe, material PLA, 30 h de produção por semana, prazo padrão de 3 dias (projetos do zero avaliados caso a caso), modelagem só de peças simples. Peças pequenas por dia: 32 (impressão < 1 h), 16 (1–5 h), 12 (≥ 5 h); acima do limite de peça pequena, uma por vez | Inserir em Configurações → Capacidade. Itens ambíguos: DP-23 a DP-25 |
+| DP-03 | Capacidade: Bambu A1 Mini, área 18 × 18 × 18 cm, peças maiores possíveis em módulos com encaixe, material PLA, prazo padrão de 3 dias (projetos do zero avaliados caso a caso), modelagem só de peças simples. Peças pequenas por dia: 32 (impressão < 1 h), 16 (1–5 h), 12 (≥ 5 h); acima do limite de peça pequena, uma por vez | Inserir em Configurações → Capacidade (ver DP-26) |
 | DP-04 | Pesos 30/30/20/20 aprovados | `scoring_configs` v2 (`approved`) |
+| DP-18 | Logotipo enviado por WhatsApp (imagem de 180 × 205 px) | Símbolo extraído e aplicado no menu e no ícone da aba; arquivo original ainda pedido |
+| DP-22 | Coordenadas do ponto de referência: **-26.28300, -48.877018** (Joinville–SC) | Inserir em Configurações → Região |
+| DP-23 | "Peça pequena" = até **8 cm em cada lado** | Capacidade → limite 8, unidade "cm em cada lado" |
+| DP-24 | As faixas de tempo de impressão são **por peça** | Capacidade → "por peça" |
+| DP-25 | A impressora fica ligada **só no horário de trabalho**; as **30 h por semana** são tempo de trabalho do Christian (preparar, acabar, atender, entregar), não tempo de impressora | Capacidade → "Horas de trabalho por semana" = 30 e "A impressora fica ligada" = só no horário de trabalho |
 | DP-05 | Estrelas 0–19…80–100 aprovadas | `scoring_configs` v2 |
 | DP-06 | Qualificada a partir de **60** (4 estrelas) | `scoring_configs` v2 |
 | DP-07 | Dados ausentes: nota sobre o que é conhecido + aviso + faixa | Motor de pontuação |

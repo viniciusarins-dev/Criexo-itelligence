@@ -23,6 +23,12 @@ export const PRINT_TIME_LABELS: Record<PrintTimeBand, string> = {
   "5h_or_more": "5 horas ou mais",
 };
 
+export const PRINTER_SCHEDULES = ["work_hours", "continuous"] as const;
+export const PRINTER_SCHEDULE_LABELS: Record<(typeof PRINTER_SCHEDULES)[number], string> = {
+  work_hours: "Só no horário de trabalho",
+  continuous: "Também fora do horário (ex.: à noite)",
+};
+
 export const SIZE_UNITS = ["cm_per_side", "cm3"] as const;
 export const SIZE_UNIT_LABELS: Record<(typeof SIZE_UNITS)[number], string> = {
   cm_per_side: "cm em cada lado",
@@ -48,7 +54,10 @@ export const productionSettingsSchema = z.object({
   /** Peças maiores que a área de impressão podem ser feitas em módulos com encaixe. */
   modularAssembly: z.boolean(),
   modeling: z.enum(MODELING_LEVELS).nullable(),
-  weeklyProductionHours: z.number().positive().max(168).nullable(),
+  /** Tempo de trabalho da pessoa (preparo, acabamento, atendimento, entrega) — não é tempo de impressora. */
+  weeklyWorkHours: z.number().positive().max(168).nullable(),
+  /** Quando a impressora fica ligada. `null` = a confirmar. */
+  printerSchedule: z.enum(PRINTER_SCHEDULES).nullable().default(null),
   standardLeadTimeDays: z.number().int().positive().max(365).nullable(),
   /** Projetos criados do zero têm prazo avaliado caso a caso. */
   customProjectsRequireEvaluation: z.boolean(),
@@ -80,7 +89,8 @@ export function pendingProductionItems(settings: ProductionSettings): string[] {
   if (!settings.printer.buildVolumeCm) pending.push("Área de impressão");
   if (settings.materials.length === 0) pending.push("Materiais");
   if (settings.modeling === null) pending.push("Modelagem 3D");
-  if (settings.weeklyProductionHours === null) pending.push("Horas de produção por semana");
+  if (settings.weeklyWorkHours === null) pending.push("Horas de trabalho por semana");
+  if (settings.printerSchedule === null) pending.push("Quando a impressora fica ligada");
   if (settings.standardLeadTimeDays === null) pending.push("Prazo padrão de entrega");
   const { smallPartLimit, printTimeBasis, smallPartsPerDay } = settings.throughput;
   if (smallPartLimit.value === null || smallPartLimit.unit === null) pending.push("Unidade do limite de peça pequena");
