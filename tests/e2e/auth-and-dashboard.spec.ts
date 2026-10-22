@@ -57,8 +57,8 @@ test.describe("com usuários configurados", () => {
 
     const indicators = page.getByRole("region", { name: "Indicadores" });
     await expect(indicators.getByText("Empresas cadastradas")).toBeVisible();
-    await expect(indicators.getByText("Nota mínima não configurada")).toBeVisible();
-    await expect(page.getByText(/Pontuação em validação \(versão 1\)/)).toBeVisible();
+    await expect(indicators.getByText("Nota ≥ 60")).toBeVisible();
+    await expect(page.getByText(/Pontuação em validação/)).toHaveCount(0);
 
     // Áreas ainda não implementadas não são links.
     const menuButton = page.getByRole("button", { name: "Abrir menu de navegação" });

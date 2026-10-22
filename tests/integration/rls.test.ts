@@ -316,15 +316,75 @@ describe.skipIf(!databaseUrl)("RLS e funções de histórico", () => {
       await as(users.admin);
       expect(await errorCode("update public.scoring_configs set config = '{}' where version = 1")).toBe("42501");
       await client.query(
-        "insert into public.scoring_configs (version, config, created_by) values (2, '{\"weights\":{}}', $1)",
+        "insert into public.scoring_configs (version, config, created_by) values (99, '{\"weights\":{}}', $1)",
         [users.admin],
       );
-      await client.query("select public.activate_scoring_config(2)");
+      await client.query("select public.activate_scoring_config(99)");
       const { rows } = await client.query("select version from public.scoring_configs where is_active");
-      expect(rows).toEqual([{ version: 2 }]);
+      expect(rows).toEqual([{ version: 99 }]);
 
       await as(users.member);
       expect(await errorCode("select public.activate_scoring_config(1)")).toBe("42501");
+    });
+  });
+
+  it("pontuação v2 aprovada está ativa com nota mínima 60", async () => {
+    await inTransaction(async (users) => {
+      await as(users.member);
+      const { rows } = await client.query(
+        "select version, approval_state, config->'qualificationMinScore' as min from public.scoring_configs where is_active",
+      );
+      expect(rows).toEqual([{ version: 2, approval_state: "approved", min: 60 }]);
+    });
+  });
+
+  it("o banco só aceita configurações conhecidas e bem formadas", async () => {
+    await inTransaction(async (users) => {
+      await as(users.admin);
+      const valid = JSON.stringify({ address: "Endereço de teste, 1", latitude: -26.3, longitude: -48.8 });
+      expect(await errorCode("insert into public.system_settings (key, value) values ('geo.reference', $1)", [valid])).toBeNull();
+      expect(await errorCode("insert into public.system_settings (key, value) values ('geo.radius_km', '10')")).toBeNull();
+
+      const noCoordinates = JSON.stringify({ address: "Endereço de teste, 1" });
+      expect(await errorCode("update public.system_settings set value = $1 where key = 'geo.reference'", [noCoordinates])).toBe("23514");
+      expect(await errorCode("update public.system_settings set value = '150' where key = 'geo.radius_km'")).toBe("23514");
+      expect(await errorCode("update public.system_settings set value = '0' where key = 'geo.radius_km'")).toBe("23514");
+      expect(await errorCode("insert into public.system_settings (key, value) values ('chave.desconhecida', '1')")).toBe("23514");
+    });
+  });
+
+  it("capacidade produtiva: membro registra nova versão, histórico imutável", async () => {
+    await inTransaction(async (users) => {
+      await as(users.member);
+      expect(
+        await errorCode("insert into public.production_settings (settings, created_by) values ('{\"schemaVersion\": 1}', $1)", [users.member]),
+      ).toBeNull();
+      expect(
+        await errorCode("insert into public.production_settings (settings, created_by) values ('{}', $1)", [users.member]),
+      ).toBe("23514");
+      expect(
+        await errorCode("insert into public.production_settings (settings, created_by) values ('{\"schemaVersion\": 1}', $1)", [users.admin]),
+      ).toBe("42501");
+      expect(await errorCode("update public.production_settings set settings = '{\"schemaVersion\": 1}'")).toBe("42501");
+      expect(await errorCode("delete from public.production_settings")).toBe("42501");
+
+      await as(users.inactive);
+      expect(await count("production_settings")).toBe(0);
+    });
+  });
+
+  it("lista da equipe com e-mail é exclusiva de administradores", async () => {
+    await inTransaction(async (users) => {
+      await as(users.admin);
+      const { rows } = await client.query("select id, email, is_active from public.admin_list_members()");
+      const inactive = rows.find((row) => row.id === users.inactive);
+      expect(inactive).toMatchObject({ is_active: false });
+      expect(inactive.email).toMatch(/^inactive-/);
+
+      await as(users.member);
+      expect(await errorCode("select * from public.admin_list_members()")).toBe("42501");
+      await as(users.inactive);
+      expect(await errorCode("select * from public.admin_list_members()")).toBe("42501");
     });
   });
 });

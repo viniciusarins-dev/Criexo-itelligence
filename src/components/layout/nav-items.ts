@@ -31,5 +31,5 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Pipeline comercial", href: "/pipeline", icon: KanbanSquare, available: false },
   { label: "Produtos e ideias", href: "/produtos", icon: Lightbulb, available: false },
   { label: "Relatórios", href: "/relatorios", icon: BarChart3, available: false },
-  { label: "Configurações", href: "/configuracoes", icon: Settings, available: false },
+  { label: "Configurações", href: "/configuracoes", icon: Settings, available: true },
 ];

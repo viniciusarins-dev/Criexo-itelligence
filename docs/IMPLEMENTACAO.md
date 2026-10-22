@@ -69,3 +69,52 @@
 - React Hook Form: não instalado ainda (nenhum formulário complexo nesta etapa;
   a versão atual de `@hookform/resolvers` tem conflito de dependências a
   resolver quando for adotada).
+
+## Etapa 2 — Configurações e decisões do Christian (22/10/2026)
+
+### Implementado
+- **Decisões aprovadas** registradas em `REGRAS_DE_NEGOCIO.md` (questionário
+  respondido por Christian). Esclarecimentos abertos: DP-22 a DP-25.
+- **Pontuação v2 aprovada** (migration `20261022000300`): mesmos pesos e regras
+  da v1, nota mínima de qualificação 60. A v1 permanece como histórico.
+- **Validação no banco** das configurações conhecidas (`geo.reference`,
+  `geo.radius_km`; chaves desconhecidas são recusadas) e do formato de
+  `production_settings`.
+- **Tela de Configurações** (`/configuracoes`):
+  - Região: endereço, coordenadas (aceita o texto copiado do Google Maps),
+    raio, link para conferir o ponto no mapa. Somente administradores editam.
+  - Capacidade produtiva: equipamento, materiais, tempos, produção diária de
+    peças pequenas, observações. Campos vazios ficam "a confirmar" e a tela
+    lista o que falta. Cada gravação cria uma nova versão.
+  - Pontuação: versão vigente, pesos, estrelas e regras (somente leitura).
+  - Equipe (administradores): papel, liberar e bloquear acesso com
+    confirmação; ninguém altera o próprio acesso.
+  - Integrações: estado real (nenhuma ativa).
+  - Perfil: nome de exibição.
+- Dashboard avisa quando região ou capacidade não estão configuradas.
+
+### Testes executados (resultados reais)
+- `npm run typecheck` e `npm run lint` — sem erros.
+- `npm run test:unit` — 53 testes passando.
+- `npm run test:integration` — 15 testes passando (banco recriado do zero).
+- `npm run test:e2e` — 24 testes passando (desktop e celular), executados
+  duas vezes seguidas no mesmo banco para confirmar que não dependem de
+  estado limpo.
+- `npm run build` — sucesso.
+
+### Problemas encontrados e corrigidos
+- **Administrador não conseguia salvar configurações**: a constraint chamava
+  uma função sem permissão de execução para `authenticated`. Pego pelo teste
+  de integração.
+- **JSON incompleto era aceito**: um `CHECK` que resulta em `NULL` passa no
+  PostgreSQL; a validação agora usa `coalesce(..., false)`.
+- **Formulário perdia o que foi digitado após um erro de validação**
+  (o React reinicia o formulário depois da action). As actions devolvem os
+  valores enviados, que viram os valores padrão. Coberto por E2E.
+
+### Pendências
+- Cadastrar os valores reais do Christian em Configurações no ambiente de
+  produção (depende do projeto Supabase e de DP-22).
+- Avaliador de viabilidade: depende dos requisitos de cada ideia de produto
+  (tamanho, material, quantidade, prazo), que entram na etapa 5.
+- Levantar opções e preços de fontes de dados e IA (DP-15, DP-16).

@@ -1,6 +1,6 @@
 # Critérios de aceitação — MVP
 
-Situação em 22/10/2026 (fim da etapa 1). "Verificado" = coberto por teste
+Situação em 22/10/2026 (fim da etapa 2). "Verificado" = coberto por teste
 automatizado executado nesta etapa.
 
 Legenda: ✅ verificado · 🟡 parcial · ⬜ não iniciado
@@ -30,7 +30,7 @@ Legenda: ✅ verificado · 🟡 parcial · ⬜ não iniciado
 
 ## Pontuação
 - ✅ Determinística para mesma entrada e versão — teste unitário
-- 🟡 Critérios e pesos consultáveis — gravados em `scoring_configs`/`score_breakdowns`; tela pendente
+- ✅ Critérios e pesos consultáveis — Configurações → Pontuação (E2E)
 - ✅ Estrelas conforme intervalos configurados — teste unitário
 - ✅ Confiança separada — teste unitário
 - ✅ Dados insuficientes sinalizados — teste unitário; dashboard mostra "dados incompletos"
@@ -43,7 +43,7 @@ Legenda: ✅ verificado · 🟡 parcial · ⬜ não iniciado
 - ✅ Alterações persistidas no banco — integração
 
 ## Interface
-- 🟡 Páginas principais em desktop e celular — login, dashboard, acesso pendente verificados em 1440px e Pixel 7 (sem rolagem horizontal)
+- 🟡 Páginas principais em desktop e celular — login, dashboard, configurações e acesso pendente verificados em 1440px e Pixel 7 (sem rolagem horizontal); demais telas pendentes
 - ✅ Identidade visual consistente — tokens semânticos em `globals.css`
 - ✅ Estados de carregamento, erro e lista vazia — dashboard
 - ✅ Nenhum botão aparenta funcionar sem executar ação — áreas não implementadas aparecem como "Em desenvolvimento", não navegáveis
@@ -55,3 +55,9 @@ Legenda: ✅ verificado · 🟡 parcial · ⬜ não iniciado
 - ✅ Fluxos críticos com integração/E2E (RLS, histórico, login, logout, acesso negado)
 - ✅ Migrations versionadas (`supabase/migrations`)
 - ✅ Documentação de configuração e execução (README)
+
+## Configurações (etapa 2)
+- ✅ Região: somente administradores editam; validação no servidor e no banco — E2E + integração
+- ✅ Capacidade produtiva versionada; campos ausentes tratados como "a confirmar" — E2E + unitário + integração
+- ✅ Equipe: liberar/bloquear com confirmação; sem alterar o próprio acesso — E2E + integração
+- ✅ Histórico de alterações de configuração — integração

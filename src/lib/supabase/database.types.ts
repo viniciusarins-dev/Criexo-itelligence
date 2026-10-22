@@ -444,6 +444,11 @@ isOneToOne: false
             "activate_scoring_config":
 { Args: { "p_version": number }; Returns: undefined
                            },
+"admin_list_members":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "created_at": string,"display_name": string,"email": string,"id": string,"is_active": boolean,"role": Database["public"]['Enums']["app_role"]
+            }[]
+                           },
 "admin_set_member_access":
 { Args: { "p_is_active": boolean,"p_role": Database["public"]['Enums']["app_role"],"p_user_id": string }; Returns: undefined
                            },

@@ -4,8 +4,8 @@ Sistema interno de prospecção comercial da **CRIEXO Soluções Criativas** par
 encontrar, avaliar e acompanhar empresas que possam comprar produtos e
 soluções em impressão 3D.
 
-> **Situação:** etapa 1 de 8 concluída — base, design system, autenticação,
-> banco com RLS, motor de pontuação e dashboard. O fluxo de prospecção, as
+> **Situação:** etapas 1 e 2 de 8 concluídas — base, design system,
+> autenticação, banco com RLS, motor de pontuação, dashboard e configurações. O fluxo de prospecção, as
 > integrações e as demais telas ainda **não** estão implementados. Ver
 > [`docs/IMPLEMENTACAO.md`](docs/IMPLEMENTACAO.md) e
 > [`docs/CRITERIOS_DE_ACEITACAO.md`](docs/CRITERIOS_DE_ACEITACAO.md).
@@ -68,11 +68,16 @@ Não há cadastro público. Para liberar alguém:
    update public.profiles set is_active = true, role = 'admin'
    where id = (select id from auth.users where email = 'email@exemplo.com');
    ```
-3. Os demais usuários são liberados por um administrador com
-   `select public.admin_set_member_access('<user-id>', 'member', true);`
-   (a tela de usuários faz parte da etapa 2).
+3. Os demais usuários são liberados em **Configurações → Equipe**.
 
-Quem será administrador ainda é uma decisão pendente (DP-13).
+Christian e Vinicius são administradores (DP-13).
+
+### Primeira configuração
+
+Em **Configurações**, preencha a região (Rua Landman, 147 + coordenadas,
+raio de 10 km) e a capacidade produtiva com os valores aprovados em
+`docs/REGRAS_DE_NEGOCIO.md`. Itens ambíguos (DP-22 a DP-25) podem ficar
+"a confirmar".
 
 ### Tipos do banco
 
@@ -94,7 +99,7 @@ npm run typecheck         # TypeScript
 npm run lint              # ESLint
 npm run test:unit         # regras de negócio (Vitest)
 npm run test:integration  # RLS e funções de histórico — requer TEST_DATABASE_URL
-npm run test:e2e          # Playwright — requer build, Supabase e usuários E2E
+npm run test:e2e          # Playwright — requer build, Supabase e usuários E2E (admin, membro, inativo)
 ```
 
 Os testes de integração são ignorados quando `TEST_DATABASE_URL` não está
@@ -122,7 +127,7 @@ depois de validados plano gratuito, limites e termos de uso — ver
 
 ## Limitações conhecidas
 
-- Apenas tema escuro.
+- Apenas tema escuro (decisão DP-19).
 - Logotipo provisório até o envio do arquivo oficial.
 - Projetos Supabase do plano gratuito podem ser pausados por inatividade e
   têm recursos de backup limitados — verificar o plano antes de usar em

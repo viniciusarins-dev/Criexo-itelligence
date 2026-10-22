@@ -48,6 +48,8 @@ export type DashboardData = {
   qualifiedTotal: number | null;
   scoringConfigVersion: number | null;
   scoringConfigIsProposal: boolean;
+  /** Configurações sem as quais a avaliação fica incompleta. */
+  missingSettings: string[];
   recentResearch: RecentResearch[];
   recentActivity: RecentActivity[];
   priorityOpportunities: PriorityOpportunity[];
@@ -75,7 +77,7 @@ export async function loadDashboard(now: Date): Promise<DashboardData> {
   const supabase = await createSupabaseServerClient();
   const since = new Date(now.getTime() - 30 * DAY_MS).toISOString();
 
-  const [companies, research30, statuses, config, research, activity, priority] = await Promise.all([
+  const [companies, research30, statuses, config, research, activity, priority, settings, production] = await Promise.all([
     supabase.from("companies").select("id", { count: "exact", head: true }),
     supabase.from("research_sessions").select("id", { count: "exact", head: true }).gte("created_at", since),
     supabase.from("opportunity_status_counts").select("commercial_status, label, category, total, position").order("position"),
@@ -96,11 +98,20 @@ export async function loadDashboard(now: Date): Promise<DashboardData> {
       .not("score", "is", null)
       .order("score", { ascending: false })
       .limit(20),
+    supabase.from("system_settings").select("key").in("key", ["geo.reference", "geo.radius_km"]),
+    supabase.from("production_settings").select("id", { count: "exact", head: true }),
   ]);
 
   if (companies.error) throw new DashboardLoadError("empresas", companies.error);
   if (research30.error) throw new DashboardLoadError("pesquisas", research30.error);
   if (config.error) throw new DashboardLoadError("configuração de pontuação", config.error);
+  if (settings.error) throw new DashboardLoadError("configurações", settings.error);
+  if (production.error) throw new DashboardLoadError("capacidade produtiva", production.error);
+
+  const configuredKeys = new Set(settings.data.map((row) => row.key));
+  const missingSettings: string[] = [];
+  if (!configuredKeys.has("geo.reference") || !configuredKeys.has("geo.radius_km")) missingSettings.push("região de atuação");
+  if (!production.count) missingSettings.push("capacidade produtiva");
 
   const activeConfig = config.data;
   const rawThreshold = (activeConfig?.config as { qualificationMinScore?: unknown } | undefined)
@@ -131,6 +142,7 @@ export async function loadDashboard(now: Date): Promise<DashboardData> {
     qualifiedTotal,
     scoringConfigVersion: activeConfig?.version ?? null,
     scoringConfigIsProposal: activeConfig?.approval_state !== "approved",
+    missingSettings,
     recentResearch: must("pesquisas recentes", research).map((row) => ({
       id: row.id,
       query: row.query,

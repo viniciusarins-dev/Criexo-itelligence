@@ -76,8 +76,8 @@ Revisão do modelo sugerido na especificação:
 | Etapa | Conteúdo | Situação |
 |-------|----------|----------|
 | 1 | Estrutura, design system, layout, autenticação, migrations + RLS, motor de pontuação, dashboard, testes | **Concluída** |
-| 2 | Configurações: ponto de referência, raio, capacidade produtiva, usuários autorizados, visualização da configuração de pontuação | Próxima |
-| 3 | Empresas: tabela com busca/filtros/paginação, cadastro e edição manuais, detalhes com fontes e evidências | |
+| 2 | Configurações: ponto de referência, raio, capacidade produtiva, usuários autorizados, visualização da configuração de pontuação | **Concluída** |
+| 3 | Empresas: tabela com busca/filtros/paginação, cadastro e edição manuais, detalhes com fontes e evidências | Próxima |
 | 4 | Oportunidades e pipeline: salvar, status, observações, contatos, colunas + tabela, histórico | |
 | 5 | Nova prospecção (fluxo guiado) + Produtos e ideias com aprovação individual e detecção de duplicidade | |
 | 6 | Integrações reais: provedor de IA (interface trocável), fontes empresariais, geocodificação — após validar termos e limites | |

@@ -151,3 +151,13 @@ export const PROPOSED_SCORING_CONFIG_V1: ScoringConfig = {
 export function parseScoringConfig(value: unknown): ScoringConfig {
   return scoringConfigSchema.parse(value);
 }
+
+/**
+ * Versão 2, APROVADA por Christian Drager em 22/10/2026 (DP-04 a DP-12):
+ * mesmos pesos e regras da v1, com nota mínima de qualificação 60 (DP-06).
+ * Espelha a migration `20261022000300_settings_and_scoring_v2.sql`.
+ */
+export const APPROVED_SCORING_CONFIG_V2: ScoringConfig = {
+  ...PROPOSED_SCORING_CONFIG_V1,
+  qualificationMinScore: 60,
+};

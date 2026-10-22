@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Building2, CheckCircle2, Handshake, ListChecks, Radar, Search, Trophy } from "lucide-react";
 
 import { PriorityOpportunities } from "@/components/dashboard/priority-opportunities";
@@ -37,8 +38,16 @@ export default async function DashboardPage() {
 
       {data.scoringConfigIsProposal ? (
         <Notice tone="pending" title={`Pontuação em validação (versão ${data.scoringConfigVersion ?? "—"})`}>
-          Os pesos e intervalos de estrelas vigentes são uma proposta inicial e ainda não foram aprovados.
-          A nota mínima de qualificação também não foi definida.
+          Os pesos e intervalos de estrelas vigentes são uma proposta e ainda não foram aprovados.
+        </Notice>
+      ) : null}
+
+      {data.missingSettings.length > 0 ? (
+        <Notice tone="warning" title={`Configuração pendente: ${data.missingSettings.join(" e ")}`}>
+          Sem esses dados, proximidade e viabilidade ficam como desconhecidas nas avaliações.{" "}
+          <Link href="/configuracoes" className="font-medium text-foreground underline underline-offset-4">
+            Abrir configurações
+          </Link>
         </Notice>
       ) : null}
 
