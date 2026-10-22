@@ -141,3 +141,5 @@
 - Impressora ligada das 08:00 às 17:30 (≈ 9,5 h/dia), com parte do tempo para
   testes de treino: novo campo `printerHoursPerDay` na capacidade. DP-26
   reduzida a uma pergunta (quantidades por dia = várias peças na mesma mesa?).
+- DP-26 resolvida: várias peças por mesa; quantidades por dia usadas
+  diretamente como capacidade diária. Novo campo `multiplePartsPerPlate`.

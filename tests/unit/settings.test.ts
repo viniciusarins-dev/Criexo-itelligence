@@ -52,6 +52,7 @@ const christian: ProductionSettings = {
     printTimeBasis: "per_part",
     smallPartsPerDay: { under_1h: 32, "1_to_5h": 16, "5h_or_more": 12 },
     largePartsOnePerPrint: true,
+    multiplePartsPerPlate: true,
   },
   notes: "",
 };

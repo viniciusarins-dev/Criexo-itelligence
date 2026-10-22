@@ -187,6 +187,14 @@ export function ProductionForm({ current }: { current: ProductionSettings | null
           </Field>
         ))}
         <Checkbox
+          id="multiplePartsPerPlate"
+          name="multiplePartsPerPlate"
+          defaultChecked={pickChecked(v, "multiplePartsPerPlate", throughput?.multiplePartsPerPlate ?? false)}
+          label="Várias peças pequenas são impressas juntas na mesma mesa"
+          description="As quantidades por dia acima já consideram isso."
+          className="md:col-span-3"
+        />
+        <Checkbox
           id="largePartsOnePerPrint"
           name="largePartsOnePerPrint"
           defaultChecked={pickChecked(v, "largePartsOnePerPrint", throughput?.largePartsOnePerPrint ?? false)}

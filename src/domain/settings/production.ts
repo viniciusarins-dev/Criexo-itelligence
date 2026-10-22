@@ -79,6 +79,11 @@ export const productionSettingsSchema = z.object({
     ),
     /** Acima do limite, apenas uma peça por impressão. */
     largePartsOnePerPrint: z.boolean(),
+    /**
+     * Peças pequenas são impressas várias na mesma mesa; as quantidades por
+     * dia já consideram isso e valem diretamente como capacidade diária.
+     */
+    multiplePartsPerPlate: z.boolean().default(false),
   }),
   notes: z.string().trim().max(2000),
 });

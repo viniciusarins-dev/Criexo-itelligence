@@ -128,6 +128,7 @@ export async function saveProduction(_previous: ActionState, formData: FormData)
         PRINT_TIME_BANDS.map((band) => [band, readNumberOrNull(formData, `perDay_${band}`)]),
       ),
       largePartsOnePerPrint: readChecked(formData, "largePartsOnePerPrint"),
+      multiplePartsPerPlate: readChecked(formData, "multiplePartsPerPlate"),
     },
     notes: readText(formData, "notes"),
   };

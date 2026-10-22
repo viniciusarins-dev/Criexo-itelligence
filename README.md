@@ -79,8 +79,8 @@ Em **Configurações**, preencha:
 - **Região:** Rua Landman, 147, Joinville–SC · coordenadas
   `-26.28300, -48.877018` · raio de 10 km.
 - **Capacidade produtiva:** os valores aprovados em
-  `docs/REGRAS_DE_NEGOCIO.md` (DP-03, DP-23 a DP-25), incluindo 9,5 h por dia
-  com a impressora ligada. Anote em "Observações" que parte desse tempo às
+  `docs/REGRAS_DE_NEGOCIO.md` (DP-03, DP-23 a DP-26), incluindo 9,5 h por dia
+  com a impressora ligada e várias peças pequenas por mesa. Anote em "Observações" que parte desse tempo às
   vezes vai para testes de treino.
 
 ### Tipos do banco

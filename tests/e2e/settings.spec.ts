@@ -73,6 +73,7 @@ test.describe("configurações — administrador", () => {
     await section.getByLabel("Peças por dia · menos de 1 hora").fill("32");
     await section.getByLabel("Peças por dia · de 1 a 5 horas").fill("16");
     await section.getByLabel("Peças por dia · 5 horas ou mais").fill("12");
+    await section.getByLabel("Várias peças pequenas são impressas juntas na mesma mesa").check();
     await section.getByRole("button", { name: "Salvar capacidade" }).click();
     await expect(page.getByText(/Capacidade produtiva salva/)).toBeVisible();
 
@@ -84,6 +85,7 @@ test.describe("configurações — administrador", () => {
     ).toBeVisible();
     await expect(reloaded.getByLabel("Horas de trabalho por semana")).toHaveValue(hours);
     await expect(reloaded.getByLabel("PLA")).toBeChecked();
+    await expect(reloaded.getByLabel("Várias peças pequenas são impressas juntas na mesma mesa")).toBeChecked();
     await expect(reloaded.getByLabel("Horas por dia com a impressora ligada")).toHaveValue("9.5");
 
     // Valor inválido é recusado pelo servidor.
