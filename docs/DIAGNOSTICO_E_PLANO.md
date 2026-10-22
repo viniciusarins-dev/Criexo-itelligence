@@ -96,20 +96,34 @@ Revisão do modelo sugerido na especificação:
 | Migrations futuras esquecerem de restringir privilégios | Comentário de alerta na migration inicial; testes de RLS como rede de segurança |
 | Pausa do projeto Supabase gratuito por inatividade | Documentado no README |
 
-## 6. Fontes candidatas (a avaliar na etapa 6 — nada integrado)
+## 6. Fontes de dados e IA — decisão sem custo (DP-15, DP-16, 22/10/2026)
 
-Nenhuma destas foi validada ainda; limites, custos e termos precisam ser
-conferidos na documentação oficial no momento da integração.
+Pesquisa feita em 22/10/2026 nas páginas oficiais. Os serviços não puderam ser
+testados porque a rede do ambiente de desenvolvimento os bloqueia (ação A-03).
 
-- **Dados abertos do CNPJ (Receita Federal)** — base pública com CNAE,
-  endereço e situação cadastral. Arquivos grandes; exige processamento.
-  Atenção a dados pessoais de MEIs.
-- **APIs de consulta por CNPJ** (ex.: BrasilAPI) — úteis para enriquecer uma
-  empresa conhecida; não servem para descobrir empresas por região.
-- **OpenStreetMap (Overpass/Nominatim)** — gratuito, com política de uso
-  restritiva (limites de requisição, proibição de uso intenso). Cobertura de
-  comércios locais variável.
-- **Google Places API** — boa cobertura de comércios; serviço pago com
-  créditos, exige conta de faturamento.
-- **API de localidades/CNAE do IBGE** — classificação de atividades e
-  municípios, para normalizar segmentos.
+### Busca de empresas
+
+| Fonte | Papel | Custo | Condições e riscos |
+|-------|-------|-------|--------------------|
+| **OpenStreetMap (Overpass API)** | Principal: encontra estabelecimentos por raio a partir do ponto de referência, já com coordenadas | Gratuito, sem cadastro | Instância pública: uso baixo (a política do wiki fala em menos de 10.000 consultas/dia, dividido por 100 para uso regular) e recomenda servidor próprio ou pago para uso comercial. Exige atribuição "© colaboradores do OpenStreetMap" (licença ODbL). **Cobertura de pequenos negócios do bairro ainda não medida.** |
+| **Dados abertos do CNPJ (Receita Federal)** | Complemento: empresas formais de Joinville por atividade (CNAE) e situação cadastral | Gratuito | Arquivos mensais grandes (~100 GB compactados para o Brasil todo); importação filtrada por município, fora do app. Sem coordenadas. Contém dados pessoais de MEIs: guardar só o necessário (LGPD). CNPJ alfanumérico para novos cadastros desde 07/2026 (o validador atual aceita só dígitos e precisa ser atualizado). |
+| **BrasilAPI (consulta por CNPJ)** | Enriquecimento: completa dados de um CNPJ já conhecido | Gratuito | Não encontra empresas novas; depende de serviço comunitário. |
+| Google Places | Descartado por enquanto | Tem uso gratuito mensal, mas exige conta de faturamento com cartão | Reavaliar se houver orçamento. |
+| Cadastro manual | Sempre disponível | — | — |
+
+### Inteligência artificial
+
+| Opção | Situação | Condições |
+|-------|----------|-----------|
+| **OpenAI (preferência)** | A API é cobrada separadamente da assinatura do ChatGPT. A documentação oficial cita um nível "Free" por região, mas há relatos de exigência de saldo. **Confirmar criando uma conta sem cartão (A-01).** | Se exigir pagamento, fica para quando houver orçamento. |
+| **Gemini (plano gratuito)** | Alternativa sem custo. | No plano gratuito, o Google **usa o conteúdo enviado para melhorar seus produtos**: enviar só segmento, produto e dados comerciais públicos das empresas, nunca dados pessoais ou confidenciais. Os limites do plano gratuito mudam sem aviso. |
+
+A camada de IA terá uma interface única, com limite de consumo configurável,
+para trocar de provedor sem mudar o resto do sistema.
+
+### Fontes consultadas
+- OpenAI — limites e níveis de uso: https://developers.openai.com/api/docs/guides/rate-limits
+- OpenAI — cobrança separada do ChatGPT: https://help.openai.com/en/articles/9039756-managing-billing-for-chatgpt-and-the-api-platform
+- Gemini — preços e plano gratuito: https://ai.google.dev/gemini-api/docs/pricing
+- Gemini — termos adicionais: https://ai.google.dev/gemini-api/terms_preview
+- Overpass API — política de uso: https://wiki.openstreetmap.org/wiki/Overpass_API

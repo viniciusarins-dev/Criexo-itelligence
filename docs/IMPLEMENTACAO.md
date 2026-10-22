@@ -143,3 +143,8 @@
   reduzida a uma pergunta (quantidades por dia = várias peças na mesma mesa?).
 - DP-26 resolvida: várias peças por mesa; quantidades por dia usadas
   diretamente como capacidade diária. Novo campo `multiplePartsPerPlate`.
+- DP-15 e DP-16 decididas (sem custo; OpenAI preferida, Gemini gratuito como
+  alternativa; OpenStreetMap + dados do CNPJ + BrasilAPI). Ações A-01 a A-03
+  registradas. Observado: o CNPJ passou a ter formato alfanumérico para novos
+  cadastros; o validador `normalizeCnpj` precisa ser atualizado antes da
+  importação de dados da Receita.
