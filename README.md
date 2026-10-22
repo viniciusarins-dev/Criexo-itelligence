@@ -113,6 +113,28 @@ implementada nesta etapa. Cada uma será adicionada como adaptador próprio
 depois de validados plano gratuito, limites e termos de uso — ver
 `docs/DIAGNOSTICO_E_PLANO.md` §6.
 
+## Plugins do Claude Code
+
+Declarados em `.claude/settings.json` (escopo do projeto). Quem abre o
+repositório no Claude Code recebe a oferta de instalá-los; depois de
+instalar, reinicie a sessão ou use `/reload-plugins`.
+
+| Plugin | Origem | Para quê |
+|--------|--------|----------|
+| `superpowers` | marketplace oficial (autor: obra) | brainstorming, TDD, depuração sistemática, revisão por subagentes |
+| `claude-code-setup` | marketplace oficial (Anthropic) | recomenda automações para o projeto |
+| `claude-security` | marketplace oficial (Anthropic) | varredura de vulnerabilidades e sugestão de correções |
+| `caveman` | `JuliusBrussee/caveman` (terceiro) | respostas curtas para economizar tokens |
+
+O **Caveman** fica em modo manual neste repositório (`.caveman.json`):
+começa desligado e liga com `/caveman` (`/caveman off` desliga). Os recursos
+opcionais dele que usam conta ou enviam dados (Auto, login) não foram
+ativados.
+
+O **OmniRoute** não faz parte do projeto: é um programa à parte, instalado em
+cada computador, que troca o modelo do Claude Code por modelos de outros
+provedores.
+
 ## Segurança
 
 - Todo acesso a dados usa a sessão do usuário; as políticas RLS bloqueiam
