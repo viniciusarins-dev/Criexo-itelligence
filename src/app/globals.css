@@ -1,0 +1,190 @@
+@import "tailwindcss";
+
+/*
+ * CRIEXO Intelligence — design tokens
+ *
+ * 1. Paleta da marca (valores brutos) — usada SOMENTE para compor os tokens
+ *    semânticos abaixo. Componentes nunca referenciam a paleta diretamente.
+ * 2. Tokens semânticos (fundo, superfície, texto, bordas, ações, estados).
+ * 3. Mapeamento para utilitários do Tailwind via @theme inline.
+ */
+
+:root {
+  /* 1. Paleta */
+  --palette-near-black: #080808;
+  --palette-charcoal: #121a1f;
+  --palette-slate: #2a2a31;
+  --palette-off-white: #f5f5f5;
+  --palette-muted-gray: #a1a1aa;
+  --palette-orange: #ff8a00;
+  --palette-amber: #ffc107;
+  --palette-red: #e11d2e;
+  --palette-green: #10b981;
+  --palette-blue: #3b82f6;
+
+  /* 2. Superfícies */
+  --background: var(--palette-near-black);
+  --surface: var(--palette-charcoal);
+  --surface-raised: color-mix(in oklab, var(--palette-charcoal) 95%, var(--palette-off-white));
+  --surface-sunken: color-mix(in oklab, var(--palette-near-black) 60%, var(--palette-charcoal));
+  --surface-hover: color-mix(in oklab, var(--palette-charcoal) 91%, var(--palette-off-white));
+  --overlay: rgb(0 0 0 / 0.66);
+
+  /* Texto */
+  --foreground: var(--palette-off-white);
+  --muted-foreground: var(--palette-muted-gray);
+  /* Somente para metadados não essenciais (contraste ≥ 4.5:1 sobre --surface). */
+  --subtle-foreground: color-mix(in oklab, var(--palette-muted-gray) 82%, var(--palette-near-black));
+
+  /* Bordas e foco */
+  --border: var(--palette-slate);
+  --border-strong: color-mix(in oklab, var(--palette-slate) 75%, var(--palette-off-white) 25%);
+  --input: var(--palette-slate);
+  --ring: var(--palette-orange);
+
+  /* Ações */
+  --primary: var(--palette-orange);
+  --primary-hover: color-mix(in oklab, var(--palette-orange) 88%, var(--palette-off-white));
+  --primary-foreground: var(--palette-near-black);
+  --primary-subtle: color-mix(in oklab, var(--palette-orange) 14%, transparent);
+  --primary-text: color-mix(in oklab, var(--palette-orange) 85%, var(--palette-off-white));
+
+  --secondary: var(--palette-charcoal);
+  --secondary-hover: var(--surface-hover);
+  --secondary-foreground: var(--palette-off-white);
+
+  /* Estados (fundo sutil + texto legível sobre fundo escuro) */
+  --success: var(--palette-green);
+  --success-subtle: color-mix(in oklab, var(--palette-green) 14%, transparent);
+  --success-text: color-mix(in oklab, var(--palette-green) 75%, var(--palette-off-white));
+
+  --warning: var(--palette-amber);
+  --warning-subtle: color-mix(in oklab, var(--palette-amber) 14%, transparent);
+  --warning-text: color-mix(in oklab, var(--palette-amber) 85%, var(--palette-off-white));
+
+  --danger: var(--palette-red);
+  --danger-hover: color-mix(in oklab, var(--palette-red) 85%, var(--palette-off-white));
+  --danger-foreground: var(--palette-off-white);
+  --danger-subtle: color-mix(in oklab, var(--palette-red) 16%, transparent);
+  --danger-text: color-mix(in oklab, var(--palette-red) 55%, var(--palette-off-white));
+
+  --info: var(--palette-blue);
+  --info-subtle: color-mix(in oklab, var(--palette-blue) 16%, transparent);
+  --info-text: color-mix(in oklab, var(--palette-blue) 60%, var(--palette-off-white));
+
+  --neutral-subtle: color-mix(in oklab, var(--palette-slate) 70%, transparent);
+  --neutral-text: var(--palette-muted-gray);
+
+  /* Forma */
+  --radius: 0.625rem;
+
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-sans: var(--font-montserrat), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-hover: var(--surface-hover);
+  --color-overlay: var(--overlay);
+
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-subtle-foreground: var(--subtle-foreground);
+
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-subtle: var(--primary-subtle);
+  --color-primary-text: var(--primary-text);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-hover: var(--secondary-hover);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-success: var(--success);
+  --color-success-subtle: var(--success-subtle);
+  --color-success-text: var(--success-text);
+  --color-warning: var(--warning);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-warning-text: var(--warning-text);
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-danger-subtle: var(--danger-subtle);
+  --color-danger-text: var(--danger-text);
+  --color-info: var(--info);
+  --color-info-subtle: var(--info-subtle);
+  --color-info-text: var(--info-text);
+  --color-neutral-subtle: var(--neutral-subtle);
+  --color-neutral-text: var(--neutral-text);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --animate-skeleton: skeleton 1.6s ease-in-out infinite;
+
+  @keyframes skeleton {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.45;
+    }
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "tnum" 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background-color: var(--primary-subtle);
+    color: var(--foreground);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  /* Números alinhados em tabelas e indicadores. */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
