@@ -293,6 +293,8 @@ describe.skipIf(!databaseUrl)("RLS e funções de histórico", () => {
 
   it("configurações: só administradores alteram e o histórico é mantido", async () => {
     await inTransaction(async (users) => {
+      // Parte de um estado conhecido, qualquer que seja o banco (desfeito no rollback).
+      await client.query("delete from public.system_settings");
       await as(users.member);
       expect(
         await errorCode("insert into public.system_settings (key, value) values ('geo.radius_km', '5')"),
@@ -302,7 +304,8 @@ describe.skipIf(!databaseUrl)("RLS e funções de histórico", () => {
       await client.query("insert into public.system_settings (key, value) values ('geo.radius_km', '5')");
       await client.query("update public.system_settings set value = '8' where key = 'geo.radius_km'");
       const history = await client.query(
-        "select previous_value, new_value, changed_by from public.system_settings_history where key = 'geo.radius_km' order by id",
+        "select previous_value, new_value, changed_by from public.system_settings_history where key = 'geo.radius_km' and changed_by = $1 order by id",
+        [users.admin],
       );
       expect(history.rows).toEqual([
         { previous_value: null, new_value: 5, changed_by: users.admin },
@@ -340,6 +343,7 @@ describe.skipIf(!databaseUrl)("RLS e funções de histórico", () => {
 
   it("o banco só aceita configurações conhecidas e bem formadas", async () => {
     await inTransaction(async (users) => {
+      await client.query("delete from public.system_settings");
       await as(users.admin);
       const valid = JSON.stringify({ address: "Endereço de teste, 1", latitude: -26.3, longitude: -48.8 });
       expect(await errorCode("insert into public.system_settings (key, value) values ('geo.reference', $1)", [valid])).toBeNull();
