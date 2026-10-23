@@ -26,7 +26,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, available: true },
   { label: "Nova prospecção", href: "/prospeccao", icon: Radar, available: false },
   { label: "Pesquisas anteriores", href: "/pesquisas", icon: History, available: false },
-  { label: "Empresas", href: "/empresas", icon: Building2, available: false },
+  { label: "Empresas", href: "/empresas", icon: Building2, available: true },
   { label: "Oportunidades", href: "/oportunidades", icon: Target, available: false },
   { label: "Pipeline comercial", href: "/pipeline", icon: KanbanSquare, available: false },
   { label: "Produtos e ideias", href: "/produtos", icon: Lightbulb, available: false },

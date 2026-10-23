@@ -11,6 +11,8 @@ import { randomUUID } from "node:crypto";
 import { Client } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
+import { haversineDistanceKm } from "@/domain/scoring";
+
 const databaseUrl = process.env.TEST_DATABASE_URL;
 
 type Users = { admin: string; member: string; inactive: string };
@@ -389,6 +391,65 @@ describe.skipIf(!databaseUrl)("RLS e funções de histórico", () => {
       expect(await errorCode("select * from public.admin_list_members()")).toBe("42501");
       await as(users.inactive);
       expect(await errorCode("select * from public.admin_list_members()")).toBe("42501");
+    });
+  });
+
+  it("visão de empresas: distância igual à do domínio, melhor oportunidade e RLS", async () => {
+    await inTransaction(async (users) => {
+      await client.query("delete from public.system_settings");
+      await as(users.admin);
+      const reference = { latitude: -26.283, longitude: -48.877018 };
+      await client.query("insert into public.system_settings (key, value) values ('geo.reference', $1)", [
+        JSON.stringify({ address: "Ponto de teste", ...reference }),
+      ]);
+      const company = await client.query(
+        `insert into public.companies (name, normalized_name, latitude, longitude, location_status)
+         values ('Empresa Distância', 'empresa distancia', -26.25, -48.85, 'source_declared') returning id`,
+      );
+      const companyId = company.rows[0].id as string;
+      const noLocation = await client.query(
+        "insert into public.companies (name, normalized_name) values ('Sem Local', 'sem local') returning id",
+      );
+      const idea = await client.query(
+        "insert into public.product_ideas (name, normalized_name, origin) values ('Suporte', 'suporte', 'manual') returning id",
+      );
+      // Notas só são gravadas pelo fluxo de pontuação; aqui o preparo é feito como superusuário.
+      await asSuperuser();
+      await client.query("insert into public.opportunities (company_id, score, created_by) values ($1, 40, $2)", [companyId, users.admin]);
+      await client.query(
+        "insert into public.opportunities (company_id, product_idea_id, score, created_by) values ($1, $2, 72, $3)",
+        [companyId, idea.rows[0].id, users.admin],
+      );
+      await as(users.admin);
+
+      const { rows } = await client.query(
+        "select distance_km, score, product_name, opportunity_count from public.company_overview where id = $1",
+        [companyId],
+      );
+      const expected = haversineDistanceKm(reference, { latitude: -26.25, longitude: -48.85 });
+      expect(Number(rows[0].distance_km)).toBeCloseTo(expected, 2);
+      expect(rows[0]).toMatchObject({ product_name: "Suporte", opportunity_count: 2 });
+      expect(Number(rows[0].score)).toBe(72);
+
+      const without = await client.query("select distance_km from public.company_overview where id = $1", [noLocation.rows[0].id]);
+      expect(without.rows[0].distance_km).toBeNull();
+
+      await as(users.inactive);
+      expect(await count("company_overview")).toBe(0);
+      await as(null);
+      expect(await errorCode("select * from public.company_overview")).toBe("42501");
+    });
+  });
+
+  it("aceita CNPJ alfanumérico em maiúsculas e recusa outros formatos", async () => {
+    await inTransaction(async (users) => {
+      await as(users.member);
+      const insert = (cnpj: string) =>
+        errorCode("insert into public.companies (name, normalized_name, cnpj) values ('X', 'x', $1)", [cnpj]);
+      expect(await insert("12ABC34501DE35")).toBeNull();
+      expect(await insert("12abc34501de35")).toBe("23514");
+      expect(await insert("12ABC34501DE3A")).toBe("23514");
+      expect(await insert("12ABC34501DE35")).toBe("23505");
     });
   });
 });

@@ -1,6 +1,6 @@
 # Critérios de aceitação — MVP
 
-Situação em 22/10/2026 (fim da etapa 2). "Verificado" = coberto por teste
+Situação em 23/10/2026 (fim da etapa 3). "Verificado" = coberto por teste
 automatizado executado nesta etapa.
 
 Legenda: ✅ verificado · 🟡 parcial · ⬜ não iniciado
@@ -24,8 +24,8 @@ Legenda: ✅ verificado · 🟡 parcial · ⬜ não iniciado
 ## Descoberta
 - ⬜ Fontes configuradas consultadas de verdade
 - 🟡 Resultados normalizados — funções de normalização testadas; adaptadores pendentes
-- 🟡 Origem registrada — `company_sources`
-- ⬜ Duplicidades tratadas (fluxo de revisão)
+- 🟡 Origem registrada — origem por campo no cadastro manual (E2E); `company_sources` pronto para as fontes
+- 🟡 Duplicidades tratadas — cadastro manual: CNPJ igual bloqueado, coincidências sinalizadas para revisão humana (E2E); falta para dados vindos das fontes
 - ✅ Dados ausentes não são inventados (motor de pontuação e proximidade) — testes unitários
 
 ## Pontuação
@@ -61,3 +61,10 @@ Legenda: ✅ verificado · 🟡 parcial · ⬜ não iniciado
 - ✅ Capacidade produtiva versionada; campos ausentes tratados como "a confirmar" — E2E + unitário + integração
 - ✅ Equipe: liberar/bloquear com confirmação; sem alterar o próprio acesso — E2E + integração
 - ✅ Histórico de alterações de configuração — integração
+
+## Empresas (etapa 3)
+- ✅ Tabela com busca, filtros, ordenação e paginação — E2E
+- ✅ Cadastro e edição com validação no servidor e valores preservados após erro — E2E + unitário
+- ✅ Detalhes com origem de cada informação, distância e mapa — E2E
+- ✅ Duplicidade sinalizada, sem união automática — E2E + unitário
+- ✅ Funciona no celular sem rolagem horizontal — E2E

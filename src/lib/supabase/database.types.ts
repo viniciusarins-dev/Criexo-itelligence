@@ -33,6 +33,12 @@ isOneToOne: false
       foreignKeyName: "commercial_activities_opportunity_id_fkey"
       columns: ["opportunity_id"]
 isOneToOne: false
+      referencedRelation: "company_overview"
+      referencedColumns: ["best_opportunity_id"]
+    },{
+      foreignKeyName: "commercial_activities_opportunity_id_fkey"
+      columns: ["opportunity_id"]
+isOneToOne: false
       referencedRelation: "opportunities"
       referencedColumns: ["id"]
     },{
@@ -108,6 +114,12 @@ isOneToOne: false
       referencedRelation: "companies"
       referencedColumns: ["id"]
     },{
+      foreignKeyName: "company_sources_company_id_fkey"
+      columns: ["company_id"]
+isOneToOne: false
+      referencedRelation: "company_overview"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "company_sources_research_session_id_fkey"
       columns: ["research_session_id"]
 isOneToOne: false
@@ -144,6 +156,12 @@ isOneToOne: false
       columns: ["company_id"]
 isOneToOne: false
       referencedRelation: "companies"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "opportunities_company_id_fkey"
+      columns: ["company_id"]
+isOneToOne: false
+      referencedRelation: "company_overview"
       referencedColumns: ["id"]
     },{
       foreignKeyName: "opportunities_created_by_fkey"
@@ -195,6 +213,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "profiles"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "opportunity_scores_opportunity_id_fkey"
+      columns: ["opportunity_id"]
+isOneToOne: false
+      referencedRelation: "company_overview"
+      referencedColumns: ["best_opportunity_id"]
     },{
       foreignKeyName: "opportunity_scores_opportunity_id_fkey"
       columns: ["opportunity_id"]
@@ -430,7 +454,27 @@ isOneToOne: false
                 }
           }
           Views: {
-            "opportunity_status_counts": {
+            "company_overview": {
+                  Row: {
+                    "best_opportunity_id": string | null,"city": string | null,"cnpj": string | null,"commercial_status": string | null,"confidence": number | null,"created_at": string | null,"distance_km": number | null,"id": string | null,"last_verified_at": string | null,"latitude": number | null,"location_status": Database["public"]['Enums']["information_status"] | null,"longitude": number | null,"name": string | null,"neighborhood": string | null,"normalized_name": string | null,"opportunity_count": number | null,"phone": string | null,"product_name": string | null,"score": number | null,"segment": string | null,"source_count": number | null,"state": string | null,"updated_at": string | null,"website": string | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "opportunities_commercial_status_fkey"
+      columns: ["commercial_status"]
+isOneToOne: false
+      referencedRelation: "commercial_statuses"
+      referencedColumns: ["key"]
+    },{
+      foreignKeyName: "opportunities_commercial_status_fkey"
+      columns: ["commercial_status"]
+isOneToOne: false
+      referencedRelation: "opportunity_status_counts"
+      referencedColumns: ["commercial_status"]
+    }
+                  ]
+                },"opportunity_status_counts": {
                   Row: {
                     "category": string | null,"commercial_status": string | null,"label": string | null,"position": number | null,"total": number | null
                   }

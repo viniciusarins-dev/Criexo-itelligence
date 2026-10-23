@@ -148,3 +148,41 @@
   registradas. Observado: o CNPJ passou a ter formato alfanumérico para novos
   cadastros; o validador `normalizeCnpj` precisa ser atualizado antes da
   importação de dados da Receita.
+
+## Etapa 3 — Empresas (23/10/2026)
+
+### Implementado
+- **CNPJ alfanumérico** (novos cadastros desde 07/2026): validação no domínio
+  (valor ASCII − 48, módulo 11; conferido com o exemplo oficial
+  12.ABC.345/01DE-35) e constraint no banco.
+- **View `company_overview`** (`security_invoker`): distância até o ponto de
+  referência (mesma fórmula do domínio), melhor oportunidade, quantidade de
+  oportunidades e última verificação.
+- **Lista de empresas** (`/empresas`): busca por nome, segmento, bairro ou
+  cidade; filtros por segmento e status; ordenação por atualização, nome,
+  distância ou pontuação; paginação de 20; tabela no computador e cartões no
+  celular; estados vazio, sem resultado, carregando e região pendente.
+- **Cadastro e edição manuais**: validação no servidor (telefone com DDD, site
+  seguro, CNPJ, UF, CEP, coordenadas), valores preservados após erro, origem
+  de cada campo registrada (RN-12), localização "confirmada" só com a
+  conferência marcada.
+- **Duplicidade** (seção 7): mesmo CNPJ é bloqueado; mesmo nome, site ou
+  telefone gera aviso com links e o usuário decide. Na edição, o aviso só
+  considera os identificadores alterados.
+- **Detalhes da empresa**: identificação, contato, localização com distância e
+  link para o mapa, tabela de origem das informações, fontes, oportunidades e
+  histórico (somente leitura; ações comerciais chegam na etapa 4).
+- **Pesquisa global** no cabeçalho, que abre a lista filtrada.
+
+### Testes executados (resultados reais)
+- `npm run typecheck`, `npm run lint` — sem erros.
+- Vitest — 86 testes passando (69 unitários + 17 de integração).
+- Playwright — 28 testes passando, em duas execuções seguidas no mesmo banco.
+- `npm run build` — sucesso.
+
+### Problemas encontrados e corrigidos
+- **Aviso de duplicidade repetido na edição**: editar qualquer campo de uma
+  empresa reabria o aviso sobre um nome já revisado no cadastro. Agora só os
+  identificadores alterados geram aviso.
+- **Filtros cortados em 1440 px** e esqueleto de carregamento da lista usado
+  na página de detalhes: corrigidos após conferência visual.

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  formatCnpj,
   normalizeBrazilianPhone,
   normalizeCnpj,
   normalizeCompanyName,
@@ -56,6 +57,19 @@ describe("normalizeCnpj", () => {
   it("aceita CNPJ com dígitos verificadores válidos", () => {
     // CNPJ de exemplo, gerado apenas para validar o algoritmo.
     expect(normalizeCnpj("11.222.333/0001-81")).toBe("11222333000181");
+  });
+
+  it("aceita o CNPJ alfanumérico (exemplo oficial da Receita)", () => {
+    expect(normalizeCnpj("12.ABC.345/01DE-35")).toBe("12ABC34501DE35");
+    expect(normalizeCnpj("12abc34501de35")).toBe("12ABC34501DE35");
+    expect(normalizeCnpj("12.ABC.345/01DE-36")).toBeNull();
+    // Os verificadores são sempre números.
+    expect(normalizeCnpj("12ABC34501DE3A")).toBeNull();
+  });
+
+  it("formata para exibição", () => {
+    expect(formatCnpj("12ABC34501DE35")).toBe("12.ABC.345/01DE-35");
+    expect(formatCnpj("11222333000181")).toBe("11.222.333/0001-81");
   });
 
   it("rejeita dígitos inválidos, repetidos ou tamanho incorreto", () => {
