@@ -1,19 +1,26 @@
 "use client";
 
-import { Loader2, LocateFixed, ScanSearch } from "lucide-react";
-import { useTransition } from "react";
+import { BadgeCheck, Loader2, LocateFixed, ScanSearch } from "lucide-react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
-import { enrichCompanyFromCnpj, geocodeCompany } from "@/app/(app)/empresas/actions";
+import { confirmCompanyLocation, enrichCompanyFromCnpj, geocodeCompany } from "@/app/(app)/empresas/actions";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-function useSourceAction(action: (input: { companyId: string }) => Promise<{ status: "success" | "error"; message: string }>, companyId: string) {
+function useSourceAction(
+  action: (input: { companyId: string }) => Promise<{ status: "success" | "error"; message: string }>,
+  companyId: string,
+  onSuccess?: () => void,
+) {
   const [pending, startTransition] = useTransition();
   const run = () =>
     startTransition(async () => {
       const result = await action({ companyId });
-      if (result.status === "success") toast.success(result.message);
-      else toast.error(result.message);
+      if (result.status === "success") {
+        toast.success(result.message);
+        onSuccess?.();
+      } else toast.error(result.message);
     });
   return { pending, run };
 }
@@ -57,5 +64,39 @@ export function SourceActions({
         <p className="text-xs text-muted-foreground">{geocodeHint}</p>
       </div>
     </div>
+  );
+}
+
+/** Confirmação humana: só confirme quem conferiu o ponto no mapa ou no local. */
+export function ConfirmLocationButton({ companyId }: { companyId: string }) {
+  const [open, setOpen] = useState(false);
+  const confirm = useSourceAction(confirmCompanyLocation, companyId, () => setOpen(false));
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="secondary">
+          <BadgeCheck aria-hidden="true" />
+          Confirmar localização
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogTitle>Confirmar a localização?</DialogTitle>
+        <DialogDescription>
+          Confirme só se você conferiu o ponto no mapa ou no local. A confirmação fica registrada com seu nome e libera a nota máxima de
+          proximidade.
+        </DialogDescription>
+        <div className="mt-4 flex justify-end gap-2">
+          <DialogClose asChild>
+            <Button type="button" variant="ghost">
+              Cancelar
+            </Button>
+          </DialogClose>
+          <Button type="button" onClick={confirm.run} disabled={confirm.pending}>
+            {confirm.pending ? <Loader2 aria-hidden="true" className="animate-spin" /> : null}
+            Confirmar
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

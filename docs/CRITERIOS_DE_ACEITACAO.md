@@ -1,6 +1,6 @@
 # Critérios de aceitação — MVP
 
-Situação em 23/10/2026 (fim da etapa 6). "Verificado" = coberto por teste
+Situação em 23/10/2026 (fim da etapa 7). "Verificado" = coberto por teste
 automatizado executado nesta etapa.
 
 Legenda: ✅ verificado · 🟡 parcial · ⬜ não iniciado
@@ -28,7 +28,7 @@ Legenda: ✅ verificado · 🟡 parcial · ⬜ não iniciado
 - ✅ Resultado parcial avisado (menos de 5 empresas), sem completar com irrelevantes — E2E + unitário
 - ✅ Resultados normalizados — conversão do OpenStreetMap e da BrasilAPI para o formato do cadastro (unitário)
 - ✅ Origem registrada — origem por campo e registro da fonte para cadastro manual, OpenStreetMap, BrasilAPI e Nominatim (E2E)
-- 🟡 Duplicidades tratadas — cadastro manual e dados das fontes: coincidências sinalizadas, nada unido; mesmo registro da fonte reaproveitado (E2E). Tela de revisão das duplicidades na etapa 7
+- ✅ Duplicidades tratadas — coincidências vão para a fila de revisão; "mesma empresa" liga o registro e só completa campos vazios, "empresas diferentes" cadastra a nova; decisão com responsável e histórico (E2E + integração)
 - ✅ Dados ausentes não são inventados (motor de pontuação e proximidade) — testes unitários
 
 ## Pontuação
@@ -90,3 +90,11 @@ Legenda: ✅ verificado · 🟡 parcial · ⬜ não iniciado
 - ✅ BrasilAPI e Nominatim só completam campos vazios; sem telefone/e-mail nem razão social de MEI — E2E + unitário
 - ✅ Pontuação gravada a cada busca, com histórico; proximidade pela distância; critérios sem avaliação ficam desconhecidos — E2E + unitário
 - 🟡 Avaliação da IA dos critérios de julgamento — lógica e validação testadas (unitário); sem chamada real (falta a chave, A-02)
+
+## Revisão, relatórios e importação (etapa 7)
+- ✅ Fila de possíveis duplicidades com comparação lado a lado e decisão registrada — E2E + integração
+- ✅ Confirmação humana da localização e recálculo da pontuação com registro no histórico — E2E + integração
+- ✅ Relatórios por período (funil, estrelas, segmentos, produtos, pesquisas, fontes) — E2E + unitário
+- ✅ Exportação CSV de oportunidades e empresas, só com sessão, protegida contra fórmulas — E2E + unitário
+- ✅ Importação dos dados abertos do CNPJ: só ativos do município, com nome fantasia, sem telefone/e-mail; CNPJ existente ignorado; nome igual vai para revisão — unitário + execução manual com arquivos fictícios
+- ✅ Nenhuma área "Em desenvolvimento" restante na navegação — E2E

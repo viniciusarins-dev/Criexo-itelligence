@@ -7,6 +7,7 @@ import { InformationBadge } from "@/components/companies/information-badge";
 import {
   ActivityForm,
   DiscardButton,
+  RecalculateScoreButton,
   SaveToggle,
   StatusForm,
 } from "@/components/opportunities/opportunity-actions";
@@ -148,6 +149,7 @@ export default async function OpportunityPage({ params, searchParams }: PageProp
                 <CardTitle>Pontuação</CardTitle>
                 {opportunity.scoreVersion ? <CardDescription>Versão {opportunity.scoreVersion} dos critérios</CardDescription> : null}
               </div>
+              <RecalculateScoreButton opportunityId={opportunity.id} />
             </CardHeader>
             <CardContent>
               {opportunity.score === null ? (

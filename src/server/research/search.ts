@@ -42,6 +42,8 @@ type Candidate = {
   companyId: string | null;
   osm: OsmMatch | null;
   possibleDuplicateUrl: string | null;
+  /** Registro da fonte que parece ser a empresa `companyId`; vai para a fila de revisão. */
+  review: { match: OsmMatch; reasons: string[] } | null;
 };
 
 type Run = { id: string; source: string };
@@ -144,7 +146,7 @@ export async function executeSearch(supabase: Client, memberId: string, sessionI
       terms,
     );
     for (const match of internal) {
-      candidates.push({ key: match.id, source: INTERNAL_SOURCE, strength: match.strength, distanceKm: match.distanceKm, name: match.name, reason: match.reason, companyId: match.id, osm: null, possibleDuplicateUrl: null });
+      candidates.push({ key: match.id, source: INTERNAL_SOURCE, strength: match.strength, distanceKm: match.distanceKm, name: match.name, reason: match.reason, companyId: match.id, osm: null, possibleDuplicateUrl: null, review: null });
     }
     await finishRun(supabase, internalRun, "succeeded", { results: internal.length, metadata: { terms } });
   }
@@ -196,7 +198,7 @@ export async function executeSearch(supabase: Client, memberId: string, sessionI
           const distanceKm = distanceTo(match);
           const linked = byRecord.get(match.sourceRecordId);
           if (linked) {
-            candidates.push({ key: linked, source: OSM_SOURCE_NAME, strength: match.strength, distanceKm, name: match.name, reason: match.reason, companyId: linked, osm: null, possibleDuplicateUrl: null });
+            candidates.push({ key: linked, source: OSM_SOURCE_NAME, strength: match.strength, distanceKm, name: match.name, reason: match.reason, companyId: linked, osm: null, possibleDuplicateUrl: null, review: null });
             continue;
           }
           // Coincidência com empresa já cadastrada: usa a existente e sinaliza; nada é copiado nem unido.
@@ -213,10 +215,11 @@ export async function executeSearch(supabase: Client, memberId: string, sessionI
               companyId: duplicate.id,
               osm: null,
               possibleDuplicateUrl: match.sourceUrl,
+              review: { match, reasons: duplicate.reasons },
             });
             continue;
           }
-          candidates.push({ key: `osm:${match.sourceRecordId}`, source: OSM_SOURCE_NAME, strength: match.strength, distanceKm, name: match.name, reason: match.reason, companyId: null, osm: match, possibleDuplicateUrl: null });
+          candidates.push({ key: `osm:${match.sourceRecordId}`, source: OSM_SOURCE_NAME, strength: match.strength, distanceKm, name: match.name, reason: match.reason, companyId: null, osm: match, possibleDuplicateUrl: null, review: null });
         }
         await finishRun(supabase, osmRun, "succeeded", {
           results: matches.length,
@@ -273,6 +276,7 @@ export async function executeSearch(supabase: Client, memberId: string, sessionI
       isNew = true;
       imported++;
     }
+    if (companyId && candidate.review) await queueDuplicateReview(supabase, { companyId, sessionId, memberId, ...candidate.review, observedAt });
     if (companyId) resultRows.push({ companyId, candidate, isNew });
   }
 
@@ -340,6 +344,51 @@ export async function executeSearch(supabase: Client, memberId: string, sessionI
     .eq("id", sessionId);
 
   return { found: resultRows.length, imported, scored, failedSources, aiNote };
+}
+
+/** Coloca o registro na fila de revisão, uma vez por registro pendente. */
+async function queueDuplicateReview(
+  supabase: Client,
+  input: { companyId: string; sessionId: string; memberId: string; match: OsmMatch; reasons: string[]; observedAt: string },
+) {
+  const pending = await supabase
+    .from("duplicate_reviews")
+    .select("id")
+    .eq("source_name", OSM_SOURCE_NAME)
+    .eq("source_record_id", input.match.sourceRecordId)
+    .eq("status", "pending")
+    .maybeSingle();
+  if (pending.error) throw pending.error;
+  if (pending.data) return;
+  const { match } = input;
+  const inserted = await supabase.from("duplicate_reviews").insert({
+    company_id: input.companyId,
+    source_name: OSM_SOURCE_NAME,
+    source_record_id: match.sourceRecordId,
+    source_url: match.sourceUrl,
+    reasons: input.reasons,
+    research_session_id: input.sessionId,
+    created_by: input.memberId,
+    candidate: {
+      name: match.name,
+      normalized_name: match.normalizedName,
+      segment: match.segment,
+      website: match.website,
+      website_domain: match.websiteDomain,
+      phone: match.phone,
+      phone_normalized: match.phoneNormalized,
+      address: match.address,
+      neighborhood: match.neighborhood,
+      city: match.city,
+      state: match.state,
+      postal_code: match.postalCode,
+      latitude: match.latitude,
+      longitude: match.longitude,
+      field_provenance: provenanceFromOsm(match, input.observedAt),
+    } as unknown as NonNullable<Json>,
+  });
+  // Outra busca pode ter colocado o mesmo registro na fila ao mesmo tempo.
+  if (inserted.error && inserted.error.code !== "23505") throw inserted.error;
 }
 
 async function scoreSearchOpportunities(

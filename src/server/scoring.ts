@@ -1,8 +1,18 @@
 import "server-only";
 
-import { computeScore, parseScoringConfig, type ScoreResult, type ScoringConfig, type ScoringInput } from "@/domain/scoring";
+import type { ProvenanceMap } from "@/domain/companies/company";
+import {
+  computeScore,
+  evaluateProximity,
+  parseScoringConfig,
+  recalculationCriteria,
+  type ScoreResult,
+  type ScoringConfig,
+  type ScoringInput,
+} from "@/domain/scoring";
 import type { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/supabase/types";
+import { currentSnapshot } from "@/server/repositories/research";
 
 type Client = Awaited<ReturnType<typeof createSupabaseServerClient>>;
 
@@ -76,4 +86,45 @@ export async function scoreOpportunity(
     .eq("id", opportunityId);
   if (updated.error) throw updated.error;
   return result;
+}
+
+export type RecalculationResult =
+  | { ok: true; before: number | null; after: ScoreResult | null; version: number }
+  | { ok: false; message: string };
+
+/** Recalcula com a localização e a região atuais, mantendo a avaliação anterior dos demais critérios. */
+export async function recalculateOpportunityScore(supabase: Client, opportunityId: string): Promise<RecalculationResult> {
+  const opportunity = await supabase
+    .from("opportunities")
+    .select("id, score, current_score_id, company:companies!inner(latitude, longitude, location_status, field_provenance)")
+    .eq("id", opportunityId)
+    .maybeSingle();
+  if (opportunity.error || !opportunity.data) return { ok: false, message: "Oportunidade não encontrada." };
+  const scoring = await activeScoringConfig(supabase);
+  if (!scoring) return { ok: false, message: "Não há configuração de pontuação ativa." };
+
+  const previous = opportunity.data.current_score_id
+    ? await supabase.from("opportunity_scores").select("input_snapshot").eq("id", opportunity.data.current_score_id).maybeSingle()
+    : { data: null, error: null };
+  if (previous.error) return { ok: false, message: "Não foi possível ler a pontuação anterior." };
+
+  const region = await currentSnapshot(supabase);
+  const { company } = opportunity.data;
+  const provenance = (company.field_provenance ?? {}) as ProvenanceMap;
+  const proximity = evaluateProximity(
+    {
+      reference: region.geoReference,
+      radiusKm: region.radiusKm,
+      company: {
+        location: company.latitude === null ? null : { latitude: company.latitude, longitude: company.longitude! },
+        locationStatus: company.location_status,
+        locationSource: provenance.location?.source,
+        locationObservedAt: provenance.location?.observedAt,
+      },
+    },
+    scoring.config,
+  );
+  const input = { criteria: recalculationCriteria(previous.data?.input_snapshot ?? null, proximity), evaluatedAt: new Date().toISOString() };
+  const after = await scoreOpportunity(supabase, opportunityId, input, scoring);
+  return { ok: true, before: opportunity.data.score === null ? null : Number(opportunity.data.score), after, version: scoring.version };
 }

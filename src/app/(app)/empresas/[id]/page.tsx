@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { InformationBadge } from "@/components/companies/information-badge";
-import { SourceActions } from "@/components/companies/source-actions";
+import { ConfirmLocationButton, SourceActions } from "@/components/companies/source-actions";
 import { CreateOpportunityForm } from "@/components/opportunities/create-opportunity-form";
 import { EmptyState } from "@/components/states/empty-state";
 import { Notice } from "@/components/states/notice";
@@ -164,6 +164,12 @@ export default async function CompanyPage({ params, searchParams }: PageProps<"/
                 )}
               </Item>
             </dl>
+            {company.latitude !== null && company.location_status !== "confirmed" ? <ConfirmLocationButton companyId={company.id} /> : null}
+            {company.location_status === "confirmed" && company.location_verified_at ? (
+              <p className="text-xs text-muted-foreground">
+                {provenance.location?.source ?? "Confirmada"} em {formatDateTime(company.location_verified_at)}
+              </p>
+            ) : null}
             {mapUrl ? (
               <a
                 href={mapUrl}

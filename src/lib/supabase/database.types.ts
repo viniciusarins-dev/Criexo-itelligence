@@ -153,6 +153,62 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"duplicate_reviews": {
+                  Row: {
+                    "candidate": NonNullable<Json>,"company_id": string,"created_at": string,"created_by": string,"decided_at": string | null,"decided_by": string | null,"decision_note": string | null,"id": string,"reasons": (string)[],"research_session_id": string | null,"resolved_company_id": string | null,"source_name": string,"source_record_id": string,"source_url": string | null,"status": Database["public"]['Enums']["duplicate_review_status"]
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "candidate": NonNullable<Json>,"company_id": string,"created_at"?: string,"created_by"?: string,"decided_at"?: string | null,"decided_by"?: string | null,"decision_note"?: string | null,"id"?: string,"reasons"?: (string)[],"research_session_id"?: string | null,"resolved_company_id"?: string | null,"source_name": string,"source_record_id": string,"source_url"?: string | null,"status"?: Database["public"]['Enums']["duplicate_review_status"]
+                  }
+                  Update: {
+                    "candidate"?: NonNullable<Json>,"company_id"?: string,"created_at"?: string,"created_by"?: string,"decided_at"?: string | null,"decided_by"?: string | null,"decision_note"?: string | null,"id"?: string,"reasons"?: (string)[],"research_session_id"?: string | null,"resolved_company_id"?: string | null,"source_name"?: string,"source_record_id"?: string,"source_url"?: string | null,"status"?: Database["public"]['Enums']["duplicate_review_status"]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "duplicate_reviews_company_id_fkey"
+      columns: ["company_id"]
+isOneToOne: false
+      referencedRelation: "companies"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "duplicate_reviews_company_id_fkey"
+      columns: ["company_id"]
+isOneToOne: false
+      referencedRelation: "company_overview"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "duplicate_reviews_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "duplicate_reviews_decided_by_fkey"
+      columns: ["decided_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "duplicate_reviews_research_session_id_fkey"
+      columns: ["research_session_id"]
+isOneToOne: false
+      referencedRelation: "research_sessions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "duplicate_reviews_resolved_company_id_fkey"
+      columns: ["resolved_company_id"]
+isOneToOne: false
+      referencedRelation: "companies"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "duplicate_reviews_resolved_company_id_fkey"
+      columns: ["resolved_company_id"]
+isOneToOne: false
+      referencedRelation: "company_overview"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"opportunities": {
                   Row: {
                     "commercial_status": string,"company_id": string,"confidence": number | null,"created_at": string,"created_by": string,"current_score_id": string | null,"id": string,"is_saved": boolean,"product_idea_id": string | null,"research_session_id": string | null,"saved_at": string | null,"score": number | null,"score_is_complete": boolean | null,"score_version": number | null,"updated_at": string
@@ -627,6 +683,12 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"record_score_recalculation":
+{ Args: { "p_note": string,"p_opportunity_id": string }; Returns: undefined
+                           },
+"resolve_duplicate_review":
+{ Args: { "p_decision": Database["public"]['Enums']["duplicate_review_status"],"p_note"?: string,"p_review_id": string }; Returns: string
+                           },
 "set_opportunity_saved":
 { Args: { "p_opportunity_id": string,"p_saved": boolean }; Returns: {
               "commercial_status": string,
@@ -653,7 +715,7 @@ isOneToOne: false
       } }
           }
           Enums: {
-            "activity_type": "status_change"|"note"|"contact"|"saved"|"unsaved"|"score_recalculated","app_role": "admin"|"member","approval_status": "pending"|"approved"|"rejected","idea_origin": "ai"|"manual","information_status": "confirmed"|"source_declared"|"ai_inference"|"unknown"|"outdated","research_status": "draft"|"awaiting_approval"|"ready"|"running"|"completed"|"partial"|"failed"|"cancelled","research_type": "segment"|"product","source_run_status": "pending"|"running"|"succeeded"|"failed"|"skipped"|"rate_limited"
+            "activity_type": "status_change"|"note"|"contact"|"saved"|"unsaved"|"score_recalculated","app_role": "admin"|"member","approval_status": "pending"|"approved"|"rejected","duplicate_review_status": "pending"|"same_company"|"different_company","idea_origin": "ai"|"manual","information_status": "confirmed"|"source_declared"|"ai_inference"|"unknown"|"outdated","research_status": "draft"|"awaiting_approval"|"ready"|"running"|"completed"|"partial"|"failed"|"cancelled","research_type": "segment"|"product","source_run_status": "pending"|"running"|"succeeded"|"failed"|"skipped"|"rate_limited"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -769,7 +831,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "activity_type": ["status_change", "note", "contact", "saved", "unsaved", "score_recalculated"],"app_role": ["admin", "member"],"approval_status": ["pending", "approved", "rejected"],"idea_origin": ["ai", "manual"],"information_status": ["confirmed", "source_declared", "ai_inference", "unknown", "outdated"],"research_status": ["draft", "awaiting_approval", "ready", "running", "completed", "partial", "failed", "cancelled"],"research_type": ["segment", "product"],"source_run_status": ["pending", "running", "succeeded", "failed", "skipped", "rate_limited"]
+            "activity_type": ["status_change", "note", "contact", "saved", "unsaved", "score_recalculated"],"app_role": ["admin", "member"],"approval_status": ["pending", "approved", "rejected"],"duplicate_review_status": ["pending", "same_company", "different_company"],"idea_origin": ["ai", "manual"],"information_status": ["confirmed", "source_declared", "ai_inference", "unknown", "outdated"],"research_status": ["draft", "awaiting_approval", "ready", "running", "completed", "partial", "failed", "cancelled"],"research_type": ["segment", "product"],"source_run_status": ["pending", "running", "succeeded", "failed", "skipped", "rate_limited"]
           }
         }
 } as const

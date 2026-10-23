@@ -622,4 +622,95 @@ describe.skipIf(!databaseUrl)("RLS e funções de histórico", () => {
       expect(rows[0].is_new_company).toBe(false);
     });
   });
+
+  describe("revisão de duplicidades (etapa 7)", () => {
+    async function setup(users: Users) {
+      await as(users.member);
+      const company = await client.query(
+        "insert into public.companies (name, normalized_name, created_by, city) values ('Ótica Visão', 'otica visao', $1, 'Joinville') returning id",
+        [users.member],
+      );
+      const candidate = {
+        name: "Ótica Visão",
+        normalized_name: "otica visao",
+        segment: "Ótica",
+        phone: "(47) 3433-0000",
+        phone_normalized: "4734330000",
+        city: "Outra Cidade",
+        latitude: -26.3,
+        longitude: -48.84,
+        field_provenance: { name: { status: "source_declared", source: "OpenStreetMap", observedAt: "2026-10-23T00:00:00Z" } },
+      };
+      const insertReview = (recordId: string) =>
+        client.query(
+          `insert into public.duplicate_reviews (company_id, source_name, source_record_id, source_url, candidate, reasons)
+           values ($1, 'OpenStreetMap', $2, 'https://www.openstreetmap.org/node/1', $3, '{name}') returning id`,
+          [company.rows[0].id, recordId, JSON.stringify(candidate)],
+        );
+      return { companyId: company.rows[0].id as string, insertReview };
+    }
+
+    it("mesma empresa: liga o registro e só completa campos vazios, com histórico", async () => {
+      await inTransaction(async (users) => {
+        const { companyId, insertReview } = await setup(users);
+        const review = await insertReview("node/1");
+        // O mesmo registro não entra duas vezes na fila.
+        expect(await errorCode(
+          `insert into public.duplicate_reviews (company_id, source_name, source_record_id, candidate) values ($1, 'OpenStreetMap', 'node/1', '{"name":"X"}')`,
+          [companyId],
+        )).toBe("23505");
+        // A decisão não pode ser gravada diretamente.
+        expect(await errorCode("update public.duplicate_reviews set status = 'same_company' where id = $1", [review.rows[0].id])).toBe("42501");
+
+        const { rows } = await client.query("select public.resolve_duplicate_review($1, 'same_company', 'Mesmo endereço') as id", [review.rows[0].id]);
+        expect(rows[0].id).toBe(companyId);
+        const company = await client.query("select segment, phone_normalized, city, latitude, location_status, field_provenance from public.companies where id = $1", [companyId]);
+        expect(company.rows[0]).toMatchObject({ segment: "Ótica", phone_normalized: "4734330000", city: "Joinville", latitude: -26.3, location_status: "source_declared" });
+        expect(company.rows[0].field_provenance.segment.source).toBe("OpenStreetMap");
+        expect(company.rows[0].field_provenance.city).toBeUndefined();
+        const source = await client.query("select company_id from public.company_sources where source_name = 'OpenStreetMap' and source_record_id = 'node/1'");
+        expect(source.rows).toEqual([{ company_id: companyId }]);
+        const decided = await client.query("select status, decided_by, decision_note from public.duplicate_reviews where id = $1", [review.rows[0].id]);
+        expect(decided.rows[0]).toEqual({ status: "same_company", decided_by: users.member, decision_note: "Mesmo endereço" });
+        expect(await errorCode("select public.resolve_duplicate_review($1, 'different_company', null)", [review.rows[0].id])).toBe("55000");
+      });
+    });
+
+    it("empresas diferentes: cadastra a da fonte; inativo e anônimo não acessam", async () => {
+      await inTransaction(async (users) => {
+        const { companyId, insertReview } = await setup(users);
+        const review = await insertReview("node/2");
+        expect(await errorCode("select public.resolve_duplicate_review($1, 'pending', null)", [review.rows[0].id])).toBe("22023");
+
+        await as(users.inactive);
+        expect(await count("duplicate_reviews")).toBe(0);
+        expect(await errorCode("select public.resolve_duplicate_review($1, 'different_company', null)", [review.rows[0].id])).toBe("42501");
+        await as(null);
+        expect(await errorCode("select * from public.duplicate_reviews")).toBe("42501");
+
+        await as(users.admin);
+        const { rows } = await client.query("select public.resolve_duplicate_review($1, 'different_company', null) as id", [review.rows[0].id]);
+        expect(rows[0].id).not.toBe(companyId);
+        const created = await client.query("select name, city, created_by, location_status from public.companies where id = $1", [rows[0].id]);
+        expect(created.rows[0]).toEqual({ name: "Ótica Visão", city: "Outra Cidade", created_by: users.admin, location_status: "source_declared" });
+        const source = await client.query("select company_id from public.company_sources where source_record_id = 'node/2'");
+        expect(source.rows).toEqual([{ company_id: rows[0].id }]);
+      });
+    });
+
+    it("recálculo de pontuação fica no histórico da oportunidade", async () => {
+      await inTransaction(async (users) => {
+        const { companyId } = await setup(users);
+        const opportunity = await client.query("insert into public.opportunities (company_id, created_by) values ($1, $2) returning id", [companyId, users.member]);
+        // Não é possível inserir esse tipo de atividade diretamente.
+        expect(await errorCode(
+          "insert into public.commercial_activities (opportunity_id, user_id, activity_type, note) values ($1, $2, 'score_recalculated', 'x')",
+          [opportunity.rows[0].id, users.member],
+        )).toBe("42501");
+        await client.query("select public.record_score_recalculation($1, 'Nota: 60')", [opportunity.rows[0].id]);
+        const { rows } = await client.query("select activity_type, user_id, note from public.commercial_activities where opportunity_id = $1", [opportunity.rows[0].id]);
+        expect(rows).toEqual([{ activity_type: "score_recalculated", user_id: users.member, note: "Nota: 60" }]);
+      });
+    });
+  });
 });

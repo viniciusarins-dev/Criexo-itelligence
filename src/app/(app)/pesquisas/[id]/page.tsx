@@ -280,7 +280,11 @@ export default async function ResearchPage({ params }: PageProps<"/pesquisas/[id
                       <a href={result.possibleDuplicateUrl} target="_blank" rel="noopener noreferrer" className="underline">
                         Ver o registro no OpenStreetMap
                       </a>{" "}
-                      e compare com o cadastro antes de usar.
+                      e{" "}
+                      <Link href="/empresas/duplicidades" className="underline">
+                        decida em Possíveis duplicidades
+                      </Link>
+                      .
                     </p>
                   ) : null}
                   <ul className="mt-3 flex flex-wrap gap-2" aria-label={`Oportunidades com ${result.company.name}`}>

@@ -67,8 +67,9 @@ test.describe("com usuários configurados", () => {
     await expect(nav.getByRole("link", { name: "Dashboard" })).toHaveAttribute("aria-current", "page");
     await expect(nav.getByRole("link", { name: "Empresas" })).toBeVisible();
     await expect(nav.getByRole("link", { name: "Pipeline comercial" })).toBeVisible();
-    await expect(nav.getByRole("link", { name: /Relatórios/ })).toHaveCount(0);
-    await expect(nav.locator("[aria-disabled=true]", { hasText: "Relatórios" })).toHaveCount(1);
+    await expect(nav.getByRole("link", { name: "Relatórios" })).toBeVisible();
+    // Todas as áreas estão implementadas: nada aparece como "Em desenvolvimento".
+    await expect(nav.locator("[aria-disabled=true]")).toHaveCount(0);
     await page.screenshot({ path: testInfo.outputPath("dashboard-menu.png"), fullPage: true });
     if (await menuButton.isVisible()) await page.keyboard.press("Escape");
 

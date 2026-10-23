@@ -1,11 +1,11 @@
 "use client";
 
-import { Bookmark, BookmarkCheck, Loader2, Phone, StickyNote, Trash2 } from "lucide-react";
+import { Bookmark, BookmarkCheck, Loader2, Phone, RefreshCw, StickyNote, Trash2 } from "lucide-react";
 import { useActionState, useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 
-import { addActivity, changeStatus, setSaved } from "@/app/(app)/oportunidades/actions";
+import { addActivity, changeStatus, recalculateScore, setSaved } from "@/app/(app)/oportunidades/actions";
 import { Field, fieldA11y } from "@/components/forms/field";
 import { useActionFeedback } from "@/components/forms/use-action-feedback";
 import { Button } from "@/components/ui/button";
@@ -182,5 +182,27 @@ export function DiscardButton({ opportunityId, statuses, companyName }: { opport
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Recalcula com a localização e a região atuais; a avaliação anterior dos demais critérios é mantida. */
+export function RecalculateScoreButton({ opportunityId }: { opportunityId: string }) {
+  const [pending, startTransition] = useTransition();
+  return (
+    <Button
+      size="sm"
+      variant="secondary"
+      disabled={pending}
+      onClick={() =>
+        startTransition(async () => {
+          const result = await recalculateScore({ opportunityId });
+          if (result.status === "success") toast.success(result.message);
+          else toast.error(result.message ?? "Não foi possível recalcular.");
+        })
+      }
+    >
+      {pending ? <Loader2 aria-hidden="true" className="animate-spin" /> : <RefreshCw aria-hidden="true" />}
+      Recalcular
+    </Button>
   );
 }

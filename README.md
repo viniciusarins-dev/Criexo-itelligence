@@ -133,7 +133,29 @@ definida; os E2E que dependem de usuários são ignorados sem as variáveis
   na página da empresa. Só preenchem campos vazios; telefone e e-mail do CNPJ
   não são importados (LGPD). `BRASILAPI_URL` e `NOMINATIM_URL` permitem
   apontar para outro servidor (os testes E2E usam um servidor simulado).
-- Importação dos dados abertos do CNPJ (Receita Federal) ainda não feita.
+- **Dados abertos do CNPJ (Receita Federal)** — importação por script, fora
+  do app (ver abaixo).
+
+### Importar os dados abertos do CNPJ
+
+1. Baixe em https://dados.gov.br (CNPJ — dados abertos) os arquivos
+   `Estabelecimentos*.zip`, `Municipios.zip` e `Cnaes.zip` do mês e
+   descompacte (são grandes: dezenas de GB no total).
+2. Simule primeiro (não grava nada):
+   ```bash
+   npx tsx scripts/import-cnpj.ts --estabelecimentos dados/*ESTABELE* \
+     --municipios dados/*MUNICCSV --cnaes dados/*CNAECSV \
+     --municipio Joinville --uf SC --responsavel seu-email@exemplo.com --simular
+   ```
+   Opcional: `--cnae 47,86` para importar só algumas atividades.
+3. Grave com `DATABASE_URL` apontando para a conexão direta do banco
+   (Supabase → Project Settings → Database). Essa conexão tem acesso total:
+   use só no seu computador, nunca no app nem em variáveis `NEXT_PUBLIC_*`.
+
+O script importa só estabelecimentos **ativos**, do município informado e
+**com nome fantasia**. Não lê telefone, e-mail nem sócios. CNPJ já cadastrado
+é ignorado. Nome igual ao de uma empresa sem CNPJ vai para "Possíveis
+duplicidades".
 
 ## Plugins do Claude Code
 

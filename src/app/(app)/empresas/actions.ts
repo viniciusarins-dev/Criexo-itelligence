@@ -315,3 +315,28 @@ export async function geocodeCompany(input: { companyId: string }): Promise<Sour
   revalidatePath("/empresas");
   return sourceResult("success", "Localização encontrada pelo endereço. Ela ainda não está confirmada.");
 }
+
+/** Confirmação humana da localização (DP-09): só depois dela a proximidade pode chegar a 100. */
+export async function confirmCompanyLocation(input: { companyId: string }): Promise<SourceActionState> {
+  const member = await requireActiveMember();
+  if (!idSchema.safeParse(input.companyId).success) return sourceResult("error", "Empresa inválida.");
+  const supabase = await createSupabaseServerClient();
+  const company = await supabase.from("companies").select("latitude, location_status, field_provenance").eq("id", input.companyId).maybeSingle();
+  if (company.error || !company.data) return sourceResult("error", "Empresa não encontrada.");
+  if (company.data.latitude === null) return sourceResult("error", "A empresa ainda não tem localização para confirmar.");
+  if (company.data.location_status === "confirmed") return sourceResult("error", "A localização já está confirmada.");
+
+  const observedAt = new Date().toISOString();
+  const provenance = {
+    ...((company.data.field_provenance ?? {}) as ProvenanceMap),
+    location: { status: "confirmed" as const, source: `Conferida por ${member.displayName}`, observedAt, by: member.id },
+  };
+  const updated = await supabase
+    .from("companies")
+    .update({ location_status: "confirmed", location_verified_at: observedAt, field_provenance: provenance as unknown as NonNullable<Json> })
+    .eq("id", input.companyId);
+  if (updated.error) return sourceResult("error", "Não foi possível confirmar a localização.");
+  revalidatePath(`/empresas/${input.companyId}`);
+  revalidatePath("/empresas");
+  return sourceResult("success", "Localização confirmada. Recalcule a pontuação das oportunidades para usar a nova informação.");
+}

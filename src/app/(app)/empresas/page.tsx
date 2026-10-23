@@ -1,10 +1,11 @@
-import { Building2, ChevronLeft, ChevronRight, Plus, Search, SearchX } from "lucide-react";
+import { Building2, ChevronLeft, ChevronRight, CopyCheck, Plus, Search, SearchX } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
 import { EmptyState } from "@/components/states/empty-state";
 import { Notice } from "@/components/states/notice";
 import { PageHeader } from "@/components/states/page-header";
+import { countPendingDuplicates } from "@/server/repositories/duplicates";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -80,7 +81,7 @@ export default async function CompaniesPage({ searchParams }: PageProps<"/empres
     ordem: raw.ordem,
     pagina: raw.pagina,
   });
-  const data = await listCompanies(params);
+  const [data, pendingDuplicates] = await Promise.all([listCompanies(params), countPendingDuplicates()]);
   const statusLabels = Object.fromEntries(data.statuses.map((status) => [status.key, status.label]));
   const filtered = Boolean(params.q || params.segmento || params.status);
   const first = (data.page - 1) * COMPANY_PAGE_SIZE + 1;
@@ -92,12 +93,22 @@ export default async function CompaniesPage({ searchParams }: PageProps<"/empres
         title="Empresas"
         description="Empresas que podem comprar soluções em impressão 3D, com localização, origem dos dados e oportunidades."
         actions={
-          <Button asChild>
-            <Link href="/empresas/nova">
-              <Plus aria-hidden="true" />
-              Cadastrar empresa
-            </Link>
-          </Button>
+          <>
+            {pendingDuplicates ? (
+              <Button asChild variant="secondary">
+                <Link href="/empresas/duplicidades">
+                  <CopyCheck aria-hidden="true" />
+                  Possíveis duplicidades ({pendingDuplicates})
+                </Link>
+              </Button>
+            ) : null}
+            <Button asChild>
+              <Link href="/empresas/nova">
+                <Plus aria-hidden="true" />
+                Cadastrar empresa
+              </Link>
+            </Button>
+          </>
         }
       />
 

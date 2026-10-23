@@ -14,6 +14,7 @@ import { requireActiveMember } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formValues, readChecked, readText, type ActionState } from "@/lib/validation/form-data";
 import { loadStatuses } from "@/server/repositories/opportunities";
+import { recalculateOpportunityScore } from "@/server/scoring";
 
 const uuid = z.uuid();
 
@@ -145,4 +146,28 @@ export async function addActivity(_previous: ActionState, formData: FormData): P
   }
   refresh(id.data, opportunity.data.company_id);
   return { status: "success", message, submittedAt: Date.now() };
+}
+
+/** Recalcula a pontuação (ex.: depois de confirmar a localização) e registra no histórico. */
+export async function recalculateScore(input: { opportunityId: string }): Promise<ActionState> {
+  await requireActiveMember();
+  if (!z.uuid().safeParse(input.opportunityId).success) return { status: "error", message: "Oportunidade inválida.", submittedAt: Date.now() };
+  const supabase = await createSupabaseServerClient();
+  let result;
+  try {
+    result = await recalculateOpportunityScore(supabase, input.opportunityId);
+  } catch {
+    return { status: "error", message: "Não foi possível recalcular a pontuação.", submittedAt: Date.now() };
+  }
+  if (!result.ok) return { status: "error", message: result.message, submittedAt: Date.now() };
+  if (!result.after) return { status: "error", message: "Ainda não há dados para pontuar: falta localização e avaliação dos demais critérios.", submittedAt: Date.now() };
+
+  const before = result.before === null ? "sem nota" : result.before.toFixed(0);
+  const after = result.after.score!.toFixed(0);
+  await supabase.rpc("record_score_recalculation", { p_opportunity_id: input.opportunityId, p_note: `Nota ${before} → ${after} (versão ${result.version}).` });
+  revalidatePath(`/oportunidades/${input.opportunityId}`);
+  revalidatePath("/oportunidades");
+  revalidatePath("/pipeline");
+  revalidatePath("/dashboard");
+  return { status: "success", message: `Pontuação recalculada: ${before} → ${after}.`, submittedAt: Date.now() };
 }

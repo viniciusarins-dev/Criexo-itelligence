@@ -399,3 +399,94 @@
   - importação dos dados abertos do CNPJ;
   - confirmação de localização;
   - relatórios e exportação CSV.
+
+## Etapa 7 — Revisão de duplicidades, relatórios e importação do CNPJ (23/10/2026)
+
+### Implementado
+- **Possíveis duplicidades** (`/empresas/duplicidades`):
+  - a busca coloca na fila (`duplicate_reviews`) cada registro de fonte que
+    coincide com uma empresa cadastrada por CNPJ, site, telefone ou nome;
+  - a tela compara os dados lado a lado e mostra o que seria completado;
+  - **"É a mesma empresa"** liga o registro à empresa existente e só
+    preenche campos vazios, com a origem marcada;
+  - **"São empresas diferentes"** cadastra a da fonte como nova;
+  - a decisão passa por `resolve_duplicate_review()`, numa única transação,
+    com responsável, data e observação. Não dá para decidir duas vezes;
+  - as próximas buscas reconhecem o registro ligado e não mostram mais o
+    aviso;
+  - a página de Empresas mostra quantas revisões estão pendentes.
+- **Confirmar localização**, na página da empresa:
+  - confirmação humana, registrada com o nome de quem conferiu e a data;
+  - libera a nota máxima de proximidade (DP-09).
+- **Recalcular pontuação**, na oportunidade:
+  - usa a localização e a região atuais e reaproveita a avaliação anterior
+    dos demais critérios (sem nova chamada à IA);
+  - grava uma nova versão da nota e registra "Pontuação recalculada" no
+    histórico, com a nota anterior e a nova, por
+    `record_score_recalculation()`.
+- **Relatórios** (`/relatorios`):
+  - período de 30 dias, 90 dias ou tudo;
+  - números de destaque (criadas, em andamento, ganhas, perdidas; a taxa de
+    ganho só aparece se houver encerradas);
+  - funil por status, estrelas (com "sem nota" e quantas notas estão
+    incompletas), segmentos, produtos, pesquisas e saúde das fontes;
+  - barras de um só tom com o valor escrito ao lado.
+- **Exportação CSV** de oportunidades e empresas:
+  - `;`, BOM UTF-8 e vírgula decimal, para abrir no Excel em português;
+  - proteção contra fórmulas;
+  - exige sessão de membro ativo.
+- **Importação dos dados abertos do CNPJ** (`scripts/import-cnpj.ts`):
+  - roda fora do app, por um administrador;
+  - acha o código do município na tabela da própria Receita;
+  - importa só estabelecimentos ativos, com nome fantasia, sem telefone nem
+    e-mail;
+  - ignora CNPJ já cadastrado e manda nome igual para revisão;
+  - tem modo de simulação. `tsx` foi adicionado como dependência de
+    desenvolvimento.
+- A navegação não tem mais áreas "Em desenvolvimento".
+- Migration `20261023000700_duplicate_reviews.sql`: tabela
+  `duplicate_reviews` (RLS, sem atualização direta, um pendente por
+  registro) e as funções `resolve_duplicate_review` e
+  `record_score_recalculation`.
+
+### Testes executados (resultados reais)
+- `npm run typecheck`, `npm run lint` e `npm run build`: sem erros.
+- Vitest: 146 testes passando, 122 unitários e 24 de integração. Os novos
+  testes cobrem:
+  - leitura dos arquivos da Receita (com arquivos fictícios em
+    `tests/fixtures/receita`);
+  - comparação das duplicidades;
+  - recálculo reaproveitando a avaliação;
+  - relatórios e CSV;
+  - as duas funções do banco, o bloqueio da decisão direta e o acesso de
+    inativo e anônimo.
+- Playwright: 48 testes passando, em duas execuções seguidas. Os novos
+  testes cobrem:
+  - decidir duplicidades, confirmar localização, recalcular e executar de
+    novo sem aviso;
+  - relatórios e os dois CSV;
+  - exportação sem sessão redireciona para o login.
+- Script de importação executado duas vezes no banco local com os arquivos
+  fictícios: 1 empresa criada e, na segunda vez, 1 ignorada pelo CNPJ.
+  Telefone e e-mail não foram gravados. Os dados de teste foram apagados
+  depois.
+- Verificação visual de `/empresas/duplicidades` e `/relatorios` em 1440 px
+  e em celular.
+
+### Problemas encontrados e corrigidos
+- **Comparação de duplicidades alargava a página no celular** (36 px): a
+  tabela tinha largura mínima. Agora as linhas quebram, e o teste E2E mede
+  a largura.
+- **Dados de teste repetidos entre execuções:** o mesmo telefone em dois
+  testes fez o sistema apontar, corretamente, uma coincidência. O telefone e
+  a observação de teste passaram a ser únicos por execução.
+- **Teste antigo da navegação** esperava "Relatórios" em desenvolvimento;
+  foi atualizado.
+- **Ambiente local:** depois de aplicar uma migration à mão, o PostgREST
+  precisa recarregar o esquema (`notify pgrst, 'reload schema'`).
+
+### Pendências
+- DP-27 (nota com só a proximidade), A-02 e A-03 continuam abertas.
+- A importação real dos dados do CNPJ depende de baixar os arquivos do mês;
+  só foi testada com arquivos fictícios.
+- Etapa 8: revisão de acessibilidade, segurança e desempenho; implantação.

@@ -30,6 +30,6 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Oportunidades", href: "/oportunidades", icon: Target, available: true },
   { label: "Pipeline comercial", href: "/pipeline", icon: KanbanSquare, available: true },
   { label: "Produtos e ideias", href: "/produtos", icon: Lightbulb, available: true },
-  { label: "Relatórios", href: "/relatorios", icon: BarChart3, available: false },
+  { label: "Relatórios", href: "/relatorios", icon: BarChart3, available: true },
   { label: "Configurações", href: "/configuracoes", icon: Settings, available: true },
 ];
