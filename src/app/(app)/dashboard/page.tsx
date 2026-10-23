@@ -29,9 +29,11 @@ export default async function DashboardPage() {
         title="Prospecção comercial"
         description="Visão geral das empresas, oportunidades e pesquisas registradas. Todos os números são calculados a partir do banco de dados."
         actions={
-          <Button variant="secondary" disabled>
-            <Radar aria-hidden="true" />
-            Nova prospecção (em desenvolvimento)
+          <Button asChild>
+            <Link href="/prospeccao">
+              <Radar aria-hidden="true" />
+              Nova prospecção
+            </Link>
           </Button>
         }
       />

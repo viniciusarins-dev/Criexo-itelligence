@@ -1,6 +1,6 @@
 # Critérios de aceitação — MVP
 
-Situação em 23/10/2026 (fim da etapa 4). "Verificado" = coberto por teste
+Situação em 23/10/2026 (fim da etapa 5). "Verificado" = coberto por teste
 automatizado executado nesta etapa.
 
 Legenda: ✅ verificado · 🟡 parcial · ⬜ não iniciado
@@ -11,18 +11,21 @@ Legenda: ✅ verificado · 🟡 parcial · ⬜ não iniciado
 - ✅ Sessões e permissões verificadas no servidor — `requireActiveMember()` + RLS em todas as tabelas
 
 ## Pesquisa
-- 🟡 Criar pesquisa por segmento ou produto — tabela, validações de BD e RLS prontas; fluxo de interface pendente
-- ⬜ Parâmetros validados no cliente e no servidor (Zod)
-- 🟡 Histórico da pesquisa — `research_sessions` e `research_source_runs` prontos
-- ⬜ Erros de integração comunicados
+- ✅ Criar pesquisa por segmento ou produto, com cópia das configurações usadas — E2E `pesquisa guiada…`
+- ✅ Parâmetros validados no cliente e no servidor (Zod) — E2E + unitário
+- ✅ Histórico da pesquisa: pesquisas anteriores e nova execução sem apagar a anterior — E2E + integração
+- 🟡 Erros de integração comunicados — busca e IA registram falhas e mostram aviso (unitário do adaptador Gemini); fontes externas pendentes
 
 ## Aprovação
-- ⬜ IA gera sugestões quando configurada
+- 🟡 IA gera sugestões quando configurada — adaptador Gemini, validação da resposta e limite diário testados com respostas simuladas; sem chamada real (rede bloqueada, A-02/A-03). Sem configuração, aparece "não configurada" (E2E)
+- ✅ Aprovação individual na interface, com aviso de ideia parecida — E2E
+- ✅ Busca só começa sem ideias pendentes e com ao menos uma aprovada — E2E + unitário
 - ✅ Aprovação/rejeição individual (BD) — integração `decisão de ideia…`
 - ✅ Aprovação persistida com usuário responsável (BD) — idem
 
 ## Descoberta
-- ⬜ Fontes configuradas consultadas de verdade
+- 🟡 Fontes consultadas de verdade — base interna (E2E); fontes externas na etapa 6
+- ✅ Resultado parcial avisado (menos de 5 empresas), sem completar com irrelevantes — E2E + unitário
 - 🟡 Resultados normalizados — funções de normalização testadas; adaptadores pendentes
 - 🟡 Origem registrada — origem por campo no cadastro manual (E2E); `company_sources` pronto para as fontes
 - 🟡 Duplicidades tratadas — cadastro manual: CNPJ igual bloqueado, coincidências sinalizadas para revisão humana (E2E); falta para dados vindos das fontes
@@ -43,7 +46,7 @@ Legenda: ✅ verificado · 🟡 parcial · ⬜ não iniciado
 - ✅ Alterações persistidas no banco — integração
 
 ## Interface
-- 🟡 Páginas principais em desktop e celular — login, dashboard, configurações e acesso pendente verificados em 1440px e Pixel 7 (sem rolagem horizontal); demais telas pendentes
+- ✅ Páginas principais em desktop e celular — todas as telas implementadas verificadas em 1440px e Pixel 7 (sem rolagem horizontal)
 - ✅ Identidade visual consistente — tokens semânticos em `globals.css`
 - ✅ Estados de carregamento, erro e lista vazia — dashboard
 - ✅ Nenhum botão aparenta funcionar sem executar ação — áreas não implementadas aparecem como "Em desenvolvimento", não navegáveis
@@ -73,3 +76,10 @@ Legenda: ✅ verificado · 🟡 parcial · ⬜ não iniciado
 - ✅ Pipeline em colunas e em tabela; mudanças atualizam o banco e o histórico — E2E
 - ✅ Oportunidade salva ≠ contatada ≠ convertida — E2E
 - ✅ Sem rolagem horizontal da página no pipeline, lista e detalhes — E2E
+
+## Prospecção e ideias (etapa 5)
+- ✅ Fluxo guiado: parâmetros → ideias → aprovação → busca — E2E
+- ✅ Ideias manuais com premissas marcadas como "declaradas", não confirmadas — E2E
+- ✅ Decisão (e revisão da decisão) com responsável e histórico — E2E + integração
+- ✅ Oportunidade por empresa × ideia aprovada, reaproveitada em novas execuções — E2E
+- ✅ Resultados e uso da IA: somente inclusão, nada para anônimos ou inativos — integração

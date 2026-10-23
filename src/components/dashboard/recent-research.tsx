@@ -1,4 +1,5 @@
 import { History } from "lucide-react";
+import Link from "next/link";
 
 import { EmptyState } from "@/components/states/empty-state";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +25,9 @@ export function RecentResearch({ items, now }: { items: RecentResearchItem[]; no
         return (
           <li key={item.id} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-foreground">{item.query}</p>
+              <Link href={`/pesquisas/${item.id}`} className="block truncate text-sm font-medium text-foreground hover:underline">
+                {item.query}
+              </Link>
               <p className="text-xs text-subtle-foreground">
                 {RESEARCH_TYPE_LABELS[item.researchType]} · {formatRelative(item.createdAt, now)}
               </p>

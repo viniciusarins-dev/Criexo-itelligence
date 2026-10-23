@@ -129,12 +129,17 @@ describe.skipIf(!databaseUrl)("RLS e funções de histórico", () => {
   it("view do dashboard respeita RLS (security_invoker)", async () => {
     await inTransaction(async (users) => {
       await as(users.member);
+      // Independe de dados já existentes no banco: compara antes e depois.
+      const totalNew = async () => {
+        const { rows } = await client.query("select total from public.opportunity_status_counts where commercial_status = 'nova'");
+        return rows.length ? Number(rows[0].total) : 0;
+      };
+      const before = await totalNew();
       const company = await client.query(
         "insert into public.companies (name, normalized_name) values ('Empresa View', 'empresa view') returning id",
       );
       await client.query("insert into public.opportunities (company_id) values ($1)", [company.rows[0].id]);
-      const visible = await client.query("select total from public.opportunity_status_counts where commercial_status = 'nova'");
-      expect(visible.rows).toEqual([{ total: 1 }]);
+      expect(await totalNew()).toBe(before + 1);
 
       await as(users.inactive);
       expect(await count("opportunity_status_counts")).toBe(0);
@@ -185,8 +190,9 @@ describe.skipIf(!databaseUrl)("RLS e funções de histórico", () => {
           [users.admin],
         ),
       ).toBe("42501");
-      await client.query("insert into public.research_sessions (research_type, query) values ('segment', 'Oficinas')");
-      const { rows } = await client.query("select created_by from public.research_sessions");
+      const { rows } = await client.query(
+        "insert into public.research_sessions (research_type, query) values ('segment', 'Oficinas') returning created_by",
+      );
       expect(rows).toEqual([{ created_by: users.member }]);
     });
   });
@@ -484,6 +490,105 @@ describe.skipIf(!databaseUrl)("RLS e funções de histórico", () => {
         [opportunityId],
       );
       expect(saved.rows[0].n).toBe(1);
+    });
+  });
+
+  it("resultados de pesquisa e uso da IA: só membros ativos, somente inclusão", async () => {
+    await inTransaction(async (users) => {
+      await as(users.member);
+      const session = await client.query(
+        "insert into public.research_sessions (created_by, research_type, query) values ($1, 'segment', 'clínicas') returning id",
+        [users.member],
+      );
+      const sessionId = session.rows[0].id as string;
+      const company = await client.query(
+        "insert into public.companies (name, normalized_name, created_by) values ('Clínica Teste', 'clinica teste', $1) returning id",
+        [users.member],
+      );
+      const companyId = company.rows[0].id as string;
+      const opportunity = await client.query(
+        "insert into public.opportunities (company_id, research_session_id, created_by) values ($1, $2, $3) returning id",
+        [companyId, sessionId, users.member],
+      );
+      const opportunityId = opportunity.rows[0].id as string;
+
+      await client.query(
+        `insert into public.research_session_results (research_session_id, opportunity_id, company_id, source_name, match_reason, rank)
+         values ($1, $2, $3, 'Base interna', 'Segmento corresponde', 1)`,
+        [sessionId, opportunityId, companyId],
+      );
+      // A mesma oportunidade não entra duas vezes na mesma pesquisa.
+      expect(
+        await errorCode(
+          `insert into public.research_session_results (research_session_id, opportunity_id, company_id, source_name, match_reason, rank)
+           values ($1, $2, $3, 'Base interna', 'Repetida', 2)`,
+          [sessionId, opportunityId, companyId],
+        ),
+      ).toBe("23505");
+      await client.query(
+        "insert into public.ai_usage_log (provider, model, purpose, research_session_id, status, error_code, created_by) values ('gemini', 'modelo', 'product_ideas', $1, 'failed', 'timeout', $2)",
+        [sessionId, users.member],
+      );
+      // Uso da IA é registrado em nome do próprio usuário.
+      expect(
+        await errorCode(
+          "insert into public.ai_usage_log (provider, model, purpose, status, created_by) values ('gemini', 'modelo', 'product_ideas', 'succeeded', $1)",
+          [users.admin],
+        ),
+      ).toBe("42501");
+
+      // Somente inclusão: nada é alterado nem apagado.
+      for (const sql of [
+        "update public.research_session_results set rank = 5",
+        "delete from public.research_session_results",
+        "update public.ai_usage_log set status = 'succeeded'",
+        "delete from public.ai_usage_log",
+      ]) {
+        expect(await errorCode(sql)).toBe("42501");
+      }
+
+      const ownRows = async () => {
+        const results = await client.query("select count(*)::int as n from public.research_session_results where research_session_id = $1", [sessionId]);
+        const usage = await client.query("select count(*)::int as n from public.ai_usage_log where research_session_id = $1", [sessionId]);
+        return [results.rows[0].n, usage.rows[0].n];
+      };
+      await as(users.inactive);
+      expect(await count("research_session_results")).toBe(0);
+      expect(await count("ai_usage_log")).toBe(0);
+      expect(
+        await errorCode(
+          "insert into public.ai_usage_log (provider, model, purpose, status, created_by) values ('gemini', 'modelo', 'product_ideas', 'succeeded', $1)",
+          [users.inactive],
+        ),
+      ).toBe("42501");
+
+      await as(null);
+      expect(await errorCode("select * from public.research_session_results")).toBe("42501");
+      expect(await errorCode("select * from public.ai_usage_log")).toBe("42501");
+
+      await as(users.admin);
+      expect(await ownRows()).toEqual([1, 1]);
+    });
+  });
+
+  it("nova execução referencia a pesquisa original sem alterá-la", async () => {
+    await inTransaction(async (users) => {
+      await as(users.member);
+      const original = await client.query(
+        "insert into public.research_sessions (created_by, research_type, query, status) values ($1, 'product', 'chaveiros', 'ready') returning id",
+        [users.member],
+      );
+      const originalId = original.rows[0].id as string;
+      await client.query("update public.research_sessions set status = 'partial', completed_at = now() where id = $1", [originalId]);
+      const rerun = await client.query(
+        "insert into public.research_sessions (created_by, research_type, query, rerun_of) values ($1, 'product', 'chaveiros', $2) returning id, status",
+        [users.member, originalId],
+      );
+      expect(rerun.rows[0].status).toBe("draft");
+      // rerun_of não pode ser trocado depois.
+      expect(await errorCode("update public.research_sessions set rerun_of = null where id = $1", [rerun.rows[0].id])).toBe("42501");
+      const { rows } = await client.query("select status from public.research_sessions where id = $1", [originalId]);
+      expect(rows[0].status).toBe("partial");
     });
   });
 });

@@ -221,3 +221,82 @@
   posição; o teste E2E agora mede a largura também na visão em colunas.
 - **Janela de descarte continuava aberta** após concluir: fecha dentro da
   própria ação.
+
+## Etapa 5 — Nova prospecção e Produtos e ideias (23/10/2026)
+
+### Implementado
+- **Nova prospecção** (`/prospeccao`): pesquisa por segmento ou por produto,
+  com objetivo opcional. A pesquisa grava uma cópia das configurações usadas
+  (região, raio, resumo da capacidade produtiva, versão da pontuação).
+- **Página da pesquisa** (`/pesquisas/[id]`) com as quatro etapas:
+  - ideias de produto sugeridas pela IA (quando configurada) ou cadastradas
+    manualmente;
+  - aprovação ou rejeição individual, com observação opcional e aviso de
+    ideia parecida (sem unir nem bloquear);
+  - botão de busca liberado só sem ideias pendentes e com ao menos uma
+    aprovada (RN-03, verificado também no servidor);
+  - resultados agrupados por empresa, com motivo, fonte, distância (ou
+    "desconhecida") e as oportunidades criadas; aviso de resultado parcial
+    abaixo de 5 empresas (RN-07), sem completar a lista.
+- **Busca nesta etapa: somente a base interna.** Os termos de busca são o
+  texto da pesquisa e os segmentos-alvo das ideias aprovadas. Segmento
+  coincidente vale mais que nome; o empate é desfeito pela distância
+  conhecida. A busca cria, ou reaproveita, uma oportunidade por empresa e
+  ideia aprovada. Cada execução fica em `research_source_runs`.
+- **Nova execução:** cria outra pesquisa ligada à original (`rerun_of`),
+  com as configurações atuais. Reaproveita as ideias já decididas e não
+  altera a pesquisa anterior nem os resultados dela.
+- **Pesquisas anteriores** (`/pesquisas`): situação, ideias, empresas e
+  fontes de cada pesquisa, com paginação.
+- **Produtos e ideias**:
+  - `/produtos`: lista com filtro por decisão;
+  - `/produtos/nova`: ideia avulsa;
+  - `/produtos/[id]`: detalhes, natureza de cada premissa, histórico de
+    decisões, oportunidades relacionadas e revisão da decisão.
+- **IA trocável** (`src/server/ai`):
+  - o adaptador Gemini usa chave só no servidor, tempo limite e mensagens
+    claras para chave inválida, limite do provedor, indisponibilidade,
+    bloqueio e resposta inválida;
+  - a resposta é validada com Zod antes de gravar e entra como "inferência
+    da IA";
+  - o limite diário vem de `AI_DAILY_REQUEST_LIMIT`;
+  - as instruções enviadas à IA proíbem inventar dados e incluem só o
+    contexto comercial, sem dados pessoais.
+- Migration `20261023000500_research_flow.sql` cria
+  `research_session_results` e `ai_usage_log`, com RLS, somente inclusão
+  para membros ativos e nada para `anon`.
+- Navegação: Nova prospecção, Pesquisas anteriores e Produtos e ideias
+  passam a estar disponíveis. O botão do dashboard leva à nova prospecção.
+
+### Testes executados (resultados reais)
+- `npm run typecheck`, `npm run lint` — sem erros.
+- Vitest — 111 testes passando: 91 unitários (inclui pesquisa, ranking,
+  ideias parecidas, instruções da IA e adaptador Gemini com respostas
+  simuladas) e 20 de integração.
+- Playwright — 36 testes passando em duas execuções seguidas. Os novos
+  testes cobrem:
+  - o fluxo guiado completo: validação, IA não configurada, ideias manuais,
+    aviso de ideia parecida, aprovação e rejeição;
+  - busca, resultado parcial e nova execução preservando a anterior;
+  - histórico da ideia e ideia avulsa.
+- `npm run build` — sucesso.
+- Verificação visual de `/prospeccao`, `/pesquisas`, `/pesquisas/[id]` e
+  `/produtos` em 1440 px e em celular.
+- **Não testado:** chamada real ao Gemini. A rede do ambiente bloqueia o
+  serviço e ainda não há chave (A-02, A-03).
+
+### Problemas encontrados e corrigidos
+- **Testes de integração dependiam dos dados já existentes no banco:**
+  falhavam depois dos E2E. Agora comparam antes e depois, ou filtram pelos
+  registros criados no próprio teste.
+- **Lista de ideias parecidas ficava longa:** mostra no máximo 5 e indica
+  quantas há a mais.
+- **Ideia manual numa pesquisa já buscada:** passou a ser recusada no
+  servidor, com orientação para executar a pesquisa novamente.
+
+### Pendências
+- A-02 (chave do Gemini como segredo do ambiente) e A-03 (liberar a rede)
+  para testar a IA de verdade.
+- A pontuação automática das oportunidades criadas pela busca entra na
+  etapa 6, junto com as fontes externas e a geocodificação.
+- A lista de Produtos e ideias mostra até 300 ideias, sem paginação.

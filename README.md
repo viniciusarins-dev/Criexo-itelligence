@@ -113,10 +113,18 @@ definida; os E2E que dependem de usuários são ignorados sem as variáveis
 
 ## Integrações
 
-Nenhuma integração externa (IA, fontes empresariais, geocodificação) está
-implementada nesta etapa. Cada uma será adicionada como adaptador próprio
-depois de validados plano gratuito, limites e termos de uso — ver
-`docs/DIAGNOSTICO_E_PLANO.md` §6.
+- **IA (Gemini, plano gratuito)** — sugere ideias de produto nas pesquisas.
+  Opcional: defina `AI_PROVIDER=gemini`, `GEMINI_API_KEY`, `GEMINI_MODEL` e
+  `AI_DAILY_REQUEST_LIMIT` como variáveis/segredos do ambiente do servidor
+  (nunca no código, no chat ou com prefixo `NEXT_PUBLIC_`). Sem elas, a tela
+  mostra "IA não configurada" e as ideias são cadastradas manualmente. Cada
+  chamada fica em `ai_usage_log` (sem prompt nem resposta) para aplicar o
+  limite diário. A resposta da IA é validada antes de ser gravada e entra
+  sempre como "inferência da IA", aguardando aprovação.
+- **Busca de empresas** — nesta etapa, somente a base interna (empresas já
+  cadastradas). OpenStreetMap, dados do CNPJ e BrasilAPI entram na etapa 6,
+  como adaptadores próprios — ver `docs/DIAGNOSTICO_E_PLANO.md` §6.
+- Geocodificação ainda não implementada.
 
 ## Plugins do Claude Code
 

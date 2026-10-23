@@ -130,7 +130,7 @@ export default async function OpportunitiesPage({ searchParams }: PageProps<"/op
             <EmptyState
               icon={Target}
               title="Nenhuma oportunidade ainda"
-              description="Crie uma oportunidade na página de uma empresa. As pesquisas de prospecção também vão gerar oportunidades."
+              description="Crie uma oportunidade na página de uma empresa. As pesquisas de prospecção também geram oportunidades."
               action={
                 <Button asChild>
                   <Link href="/empresas">Ir para Empresas</Link>

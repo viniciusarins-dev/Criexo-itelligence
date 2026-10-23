@@ -79,9 +79,9 @@ Revisão do modelo sugerido na especificação:
 | 2 | Configurações: ponto de referência, raio, capacidade produtiva, usuários autorizados, visualização da configuração de pontuação | **Concluída** |
 | 3 | Empresas: tabela com busca/filtros/paginação, cadastro e edição manuais, detalhes com fontes e evidências | **Concluída** |
 | 4 | Oportunidades e pipeline: salvar, status, observações, contatos, colunas + tabela, histórico | **Concluída** |
-| 5 | Nova prospecção (fluxo guiado) + Produtos e ideias com aprovação individual e detecção de duplicidade | Próxima |
-| 6 | Integrações reais: provedor de IA (interface trocável), fontes empresariais, geocodificação — após validar termos e limites | |
-| 7 | Deduplicação com revisão humana, pesquisas anteriores e reexecução, relatórios, exportação CSV | |
+| 5 | Nova prospecção (fluxo guiado) + Produtos e ideias com aprovação individual e detecção de duplicidade; IA (Gemini) trocável com limite diário; busca na base interna; pesquisas anteriores e nova execução | **Concluída** |
+| 6 | Fontes empresariais reais (OpenStreetMap, CNPJ, BrasilAPI), geocodificação e pontuação automática nas pesquisas — após liberar a rede (A-03) | Próxima |
+| 7 | Deduplicação com revisão humana para dados das fontes, relatórios, exportação CSV | |
 | 8 | Revisão de acessibilidade, segurança, desempenho; implantação | |
 
 ## 5. Riscos técnicos e dependências externas

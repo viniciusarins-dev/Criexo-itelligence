@@ -106,3 +106,25 @@ export function pendingProductionItems(settings: ProductionSettings): string[] {
   if (PRINT_TIME_BANDS.some((band) => smallPartsPerDay[band] === null)) pending.push("Peças por dia em cada faixa de tempo");
   return pending;
 }
+
+/** Resumo em linguagem simples (usado nas instruções para a IA). Só inclui o que foi informado. */
+export function capacitySummary(settings: ProductionSettings): string {
+  const parts: string[] = [`impressora ${settings.printer.model}`];
+  const volume = settings.printer.buildVolumeCm;
+  if (volume) parts.push(`área de impressão ${volume.x} × ${volume.y} × ${volume.z} cm`);
+  if (settings.modularAssembly) parts.push("peças maiores podem ser feitas em módulos com encaixe");
+  if (settings.materials.length) parts.push(`materiais: ${settings.materials.join(", ")}`);
+  if (settings.modeling) parts.push(MODELING_LABELS[settings.modeling].toLowerCase());
+  if (settings.standardLeadTimeDays !== null) parts.push(`prazo padrão de ${settings.standardLeadTimeDays} dia(s)`);
+  const { smallPartLimit, smallPartsPerDay } = settings.throughput;
+  if (smallPartLimit.value !== null && smallPartLimit.unit) {
+    const perDay = PRINT_TIME_BANDS.filter((band) => smallPartsPerDay[band] !== null)
+      .map((band) => `${smallPartsPerDay[band]} por dia (${PRINT_TIME_LABELS[band].toLowerCase()})`)
+      .join(", ");
+    parts.push(
+      `peças pequenas até ${smallPartLimit.value} ${SIZE_UNIT_LABELS[smallPartLimit.unit]}${perDay ? `: ${perDay}` : ""}`,
+    );
+  }
+  if (settings.throughput.largePartsOnePerPrint) parts.push("peças acima desse limite saem uma por vez");
+  return parts.join("; ");
+}

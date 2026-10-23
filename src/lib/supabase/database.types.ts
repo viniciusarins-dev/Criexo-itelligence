@@ -5,7 +5,33 @@ export type Database = {
   
   "public": {
           Tables: {
-            "commercial_activities": {
+            "ai_usage_log": {
+                  Row: {
+                    "created_at": string,"created_by": string,"error_code": string | null,"id": number,"model": string,"provider": string,"purpose": string,"research_session_id": string | null,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string,"error_code"?: string | null,"id"?: never,"model": string,"provider": string,"purpose": string,"research_session_id"?: string | null,"status": string
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string,"error_code"?: string | null,"id"?: never,"model"?: string,"provider"?: string,"purpose"?: string,"research_session_id"?: string | null,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "ai_usage_log_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ai_usage_log_research_session_id_fkey"
+      columns: ["research_session_id"]
+isOneToOne: false
+      referencedRelation: "research_sessions"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"commercial_activities": {
                   Row: {
                     "activity_type": Database["public"]['Enums']["activity_type"],"created_at": string,"id": string,"new_status": string | null,"note": string | null,"opportunity_id": string,"previous_status": string | null,"user_id": string
                   }
@@ -324,6 +350,56 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"research_session_results": {
+                  Row: {
+                    "company_id": string,"created_at": string,"id": number,"match_reason": string,"opportunity_id": string,"product_idea_id": string | null,"rank": number,"research_session_id": string,"source_name": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "company_id": string,"created_at"?: string,"id"?: never,"match_reason": string,"opportunity_id": string,"product_idea_id"?: string | null,"rank": number,"research_session_id": string,"source_name": string
+                  }
+                  Update: {
+                    "company_id"?: string,"created_at"?: string,"id"?: never,"match_reason"?: string,"opportunity_id"?: string,"product_idea_id"?: string | null,"rank"?: number,"research_session_id"?: string,"source_name"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "research_session_results_company_id_fkey"
+      columns: ["company_id"]
+isOneToOne: false
+      referencedRelation: "companies"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "research_session_results_company_id_fkey"
+      columns: ["company_id"]
+isOneToOne: false
+      referencedRelation: "company_overview"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "research_session_results_opportunity_id_fkey"
+      columns: ["opportunity_id"]
+isOneToOne: false
+      referencedRelation: "company_overview"
+      referencedColumns: ["best_opportunity_id"]
+    },{
+      foreignKeyName: "research_session_results_opportunity_id_fkey"
+      columns: ["opportunity_id"]
+isOneToOne: false
+      referencedRelation: "opportunities"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "research_session_results_product_idea_id_fkey"
+      columns: ["product_idea_id"]
+isOneToOne: false
+      referencedRelation: "product_ideas"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "research_session_results_research_session_id_fkey"
+      columns: ["research_session_id"]
+isOneToOne: false
+      referencedRelation: "research_sessions"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"research_sessions": {
                   Row: {

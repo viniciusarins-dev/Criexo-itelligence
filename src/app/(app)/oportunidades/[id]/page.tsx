@@ -154,7 +154,7 @@ export default async function OpportunityPage({ params, searchParams }: PageProp
                 <EmptyState
                   icon={Gauge}
                   title="Sem avaliação"
-                  description="A pontuação é calculada quando a empresa é avaliada por uma pesquisa de prospecção (em desenvolvimento)."
+                  description="Esta oportunidade ainda não foi avaliada. A pontuação automática nas pesquisas entra na próxima etapa."
                   className="py-4"
                 />
               ) : (
