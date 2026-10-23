@@ -1,6 +1,6 @@
 # Critérios de aceitação — MVP
 
-Situação em 23/10/2026 (fim da etapa 5). "Verificado" = coberto por teste
+Situação em 23/10/2026 (fim da etapa 6). "Verificado" = coberto por teste
 automatizado executado nesta etapa.
 
 Legenda: ✅ verificado · 🟡 parcial · ⬜ não iniciado
@@ -14,7 +14,7 @@ Legenda: ✅ verificado · 🟡 parcial · ⬜ não iniciado
 - ✅ Criar pesquisa por segmento ou produto, com cópia das configurações usadas — E2E `pesquisa guiada…`
 - ✅ Parâmetros validados no cliente e no servidor (Zod) — E2E + unitário
 - ✅ Histórico da pesquisa: pesquisas anteriores e nova execução sem apagar a anterior — E2E + integração
-- 🟡 Erros de integração comunicados — busca e IA registram falhas e mostram aviso (unitário do adaptador Gemini); fontes externas pendentes
+- ✅ Erros de integração comunicados — falha do OpenStreetMap registrada na execução e avisada, base interna continua (E2E com servidor simulado); adaptadores com erros traduzidos (unitário)
 
 ## Aprovação
 - 🟡 IA gera sugestões quando configurada — adaptador Gemini, validação da resposta e limite diário testados com respostas simuladas; sem chamada real (rede bloqueada, A-02/A-03). Sem configuração, aparece "não configurada" (E2E)
@@ -24,11 +24,11 @@ Legenda: ✅ verificado · 🟡 parcial · ⬜ não iniciado
 - ✅ Aprovação persistida com usuário responsável (BD) — idem
 
 ## Descoberta
-- 🟡 Fontes consultadas de verdade — base interna (E2E); fontes externas na etapa 6
+- 🟡 Fontes consultadas de verdade — base interna e OpenStreetMap integrados e testados contra servidor simulado (E2E); chamada às instâncias reais pendente (rede bloqueada, A-03)
 - ✅ Resultado parcial avisado (menos de 5 empresas), sem completar com irrelevantes — E2E + unitário
-- 🟡 Resultados normalizados — funções de normalização testadas; adaptadores pendentes
-- 🟡 Origem registrada — origem por campo no cadastro manual (E2E); `company_sources` pronto para as fontes
-- 🟡 Duplicidades tratadas — cadastro manual: CNPJ igual bloqueado, coincidências sinalizadas para revisão humana (E2E); falta para dados vindos das fontes
+- ✅ Resultados normalizados — conversão do OpenStreetMap e da BrasilAPI para o formato do cadastro (unitário)
+- ✅ Origem registrada — origem por campo e registro da fonte para cadastro manual, OpenStreetMap, BrasilAPI e Nominatim (E2E)
+- 🟡 Duplicidades tratadas — cadastro manual e dados das fontes: coincidências sinalizadas, nada unido; mesmo registro da fonte reaproveitado (E2E). Tela de revisão das duplicidades na etapa 7
 - ✅ Dados ausentes não são inventados (motor de pontuação e proximidade) — testes unitários
 
 ## Pontuação
@@ -83,3 +83,10 @@ Legenda: ✅ verificado · 🟡 parcial · ⬜ não iniciado
 - ✅ Decisão (e revisão da decisão) com responsável e histórico — E2E + integração
 - ✅ Oportunidade por empresa × ideia aprovada, reaproveitada em novas execuções — E2E
 - ✅ Resultados e uso da IA: somente inclusão, nada para anônimos ou inativos — integração
+
+## Fontes e pontuação (etapa 6)
+- ✅ Busca no OpenStreetMap pelo raio, com limite diário e atribuição — E2E (servidor simulado) + unitário
+- ✅ Empresa nova cadastrada com origem; nova execução reaproveita o mesmo registro — E2E
+- ✅ BrasilAPI e Nominatim só completam campos vazios; sem telefone/e-mail nem razão social de MEI — E2E + unitário
+- ✅ Pontuação gravada a cada busca, com histórico; proximidade pela distância; critérios sem avaliação ficam desconhecidos — E2E + unitário
+- 🟡 Avaliação da IA dos critérios de julgamento — lógica e validação testadas (unitário); sem chamada real (falta a chave, A-02)

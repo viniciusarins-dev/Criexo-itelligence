@@ -46,3 +46,49 @@ export function buildProductIdeasPrompt(context: IdeasPromptContext): string {
   ];
   return lines.join("\n");
 }
+
+export type AssessmentPromptContext = {
+  capacitySummary: string | null;
+  /** Identificadores curtos (i1, i2…) — a IA não recebe ids internos. */
+  ideas: { ref: string; name: string; problem: string | null; application: string | null; technicalConstraints: string | null }[];
+  /** Só dados comerciais públicos: nome, categoria e bairro/cidade. Nada de telefone, site, CNPJ ou pessoas. */
+  companies: { ref: string; name: string; segment: string | null; place: string | null }[];
+};
+
+/** Instruções para a IA avaliar cada par empresa × produto nos critérios de julgamento. */
+export function buildAssessmentPrompt(context: AssessmentPromptContext): string {
+  return [
+    "Você ajuda a CRIEXO Soluções Criativas, uma empresa pequena de impressão 3D em Joinville–SC,",
+    "a priorizar empresas para oferecer produtos impressos em 3D.",
+    "",
+    context.capacitySummary
+      ? `Capacidade produtiva informada: ${context.capacitySummary}`
+      : "Capacidade produtiva: não informada — sem ela, não avalie a viabilidade (score null).",
+    "",
+    "Produtos aprovados:",
+    ...context.ideas.map(
+      (idea) =>
+        `- ${idea.ref}: ${idea.name}${idea.problem ? ` | problema: ${idea.problem}` : ""}${idea.application ? ` | aplicação: ${idea.application}` : ""}${idea.technicalConstraints ? ` | dificuldades: ${idea.technicalConstraints}` : ""}`,
+    ),
+    "",
+    "Empresas:",
+    ...context.companies.map(
+      (company) => `- ${company.ref}: ${company.name}${company.segment ? ` | categoria: ${company.segment}` : ""}${company.place ? ` | local: ${company.place}` : ""}`,
+    ),
+    "",
+    "Para cada combinação de empresa e produto, dê notas de 0 a 100:",
+    "- productFit: quanto o produto resolve algo plausível para esse tipo de empresa;",
+    "- feasibility: se a CRIEXO consegue fabricar e entregar com a capacidade informada (infeasible=true se impossível);",
+    "- commercialPotential: chance de compra recorrente ou em volume para esse tipo de empresa.",
+    "Regras:",
+    "- Você só conhece o nome, a categoria e o local. Não invente porte, faturamento, clientes ou necessidades.",
+    "- Se não houver base para avaliar um critério, use score null e diga o que falta em missingInformation.",
+    "- Justifique cada nota em uma frase, como hipótese.",
+    "- Escreva em português do Brasil.",
+    "",
+    "Responda somente com JSON neste formato:",
+    '{"assessments":[{"company":"c1","idea":"i1","productFit":{"score":0,"justification":"","missingInformation":[]},',
+    '"feasibility":{"score":0,"infeasible":false,"justification":"","missingInformation":[]},',
+    '"commercialPotential":{"score":0,"justification":"","missingInformation":[]}}]}',
+  ].join("\n");
+}

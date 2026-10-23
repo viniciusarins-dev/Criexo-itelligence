@@ -121,10 +121,19 @@ definida; os E2E que dependem de usuários são ignorados sem as variáveis
   chamada fica em `ai_usage_log` (sem prompt nem resposta) para aplicar o
   limite diário. A resposta da IA é validada antes de ser gravada e entra
   sempre como "inferência da IA", aguardando aprovação.
-- **Busca de empresas** — nesta etapa, somente a base interna (empresas já
-  cadastradas). OpenStreetMap, dados do CNPJ e BrasilAPI entram na etapa 6,
-  como adaptadores próprios — ver `docs/DIAGNOSTICO_E_PLANO.md` §6.
-- Geocodificação ainda não implementada.
+  Com a IA configurada, a busca também pede a ela uma avaliação de
+  compatibilidade, viabilidade e potencial comercial (uma chamada por busca,
+  só com nome, categoria e bairro/cidade das empresas).
+- **Busca de empresas** — base interna + **OpenStreetMap** (Overpass), no raio
+  a partir do ponto de referência. Até 100 consultas por dia (política da
+  instância pública; `OSM_DAILY_QUERY_LIMIT` muda o limite, por exemplo para
+  uma instância própria em `OVERPASS_URL`). Atribuição "© colaboradores do
+  OpenStreetMap (ODbL)" exibida onde os dados aparecem.
+- **BrasilAPI** (CNPJ) e **Nominatim** (endereço → coordenadas) — sob demanda,
+  na página da empresa. Só preenchem campos vazios; telefone e e-mail do CNPJ
+  não são importados (LGPD). `BRASILAPI_URL` e `NOMINATIM_URL` permitem
+  apontar para outro servidor (os testes E2E usam um servidor simulado).
+- Importação dos dados abertos do CNPJ (Receita Federal) ainda não feita.
 
 ## Plugins do Claude Code
 

@@ -154,7 +154,7 @@ export default async function OpportunityPage({ params, searchParams }: PageProp
                 <EmptyState
                   icon={Gauge}
                   title="Sem avaliação"
-                  description="Esta oportunidade ainda não foi avaliada. A pontuação automática nas pesquisas entra na próxima etapa."
+                  description="Esta oportunidade ainda não foi avaliada. A pontuação é calculada quando uma pesquisa encontra a empresa; sem localização nem avaliação da IA, não há o que pontuar."
                   className="py-4"
                 />
               ) : (
@@ -189,6 +189,17 @@ export default async function OpportunityPage({ params, searchParams }: PageProp
                             <span>Peso {Math.round(item.weight * 100)}%</span>
                             <InformationBadge status={item.informationStatus} />
                           </div>
+                          {item.evidence.map((entry, index) => (
+                            <p key={index} className="text-xs text-muted-foreground">
+                              {entry.statement}
+                              {entry.source ? <span className="text-subtle-foreground"> — {entry.source}</span> : null}
+                            </p>
+                          ))}
+                          {item.notes.map((note) => (
+                            <p key={note} className="text-xs text-warning-text">
+                              {note}
+                            </p>
+                          ))}
                           {item.missingData.length ? (
                             <p className="text-xs text-muted-foreground">Falta: {item.missingData.join(" · ")}</p>
                           ) : null}

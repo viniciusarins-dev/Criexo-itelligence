@@ -591,4 +591,35 @@ describe.skipIf(!databaseUrl)("RLS e funções de histórico", () => {
       expect(rows[0].status).toBe("partial");
     });
   });
+
+  it("etapa 6: uso da IA na avaliação e marcação de empresa nova ou possível duplicidade", async () => {
+    await inTransaction(async (users) => {
+      await as(users.member);
+      const insertUsage = (purpose: string) =>
+        errorCode(
+          "insert into public.ai_usage_log (provider, model, purpose, status, created_by) values ('gemini', 'modelo', $1, 'succeeded', $2)",
+          [purpose, users.member],
+        );
+      expect(await insertUsage("opportunity_assessment")).toBeNull();
+      expect(await insertUsage("outra_finalidade")).toBe("23514");
+
+      const session = await client.query("insert into public.research_sessions (created_by, research_type, query) values ($1, 'segment', 'Dentistas') returning id", [users.member]);
+      const company = await client.query("insert into public.companies (name, normalized_name, created_by) values ('Nova', 'nova', $1) returning id", [users.member]);
+      const opportunity = await client.query("insert into public.opportunities (company_id, created_by) values ($1, $2) returning id", [company.rows[0].id, users.member]);
+      const values = [session.rows[0].id, opportunity.rows[0].id, company.rows[0].id];
+      expect(
+        await errorCode(
+          `insert into public.research_session_results (research_session_id, opportunity_id, company_id, source_name, match_reason, rank, possible_duplicate_url)
+           values ($1, $2, $3, 'OpenStreetMap', 'x', 1, 'javascript:alert(1)')`,
+          values,
+        ),
+      ).toBe("23514");
+      const { rows } = await client.query(
+        `insert into public.research_session_results (research_session_id, opportunity_id, company_id, source_name, match_reason, rank, possible_duplicate_url)
+         values ($1, $2, $3, 'OpenStreetMap', 'x', 1, 'https://www.openstreetmap.org/node/1') returning is_new_company`,
+        values,
+      );
+      expect(rows[0].is_new_company).toBe(false);
+    });
+  });
 });

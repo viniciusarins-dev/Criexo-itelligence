@@ -13,6 +13,7 @@ import { Notice } from "@/components/states/notice";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { canSearch, RESULT_TARGET } from "@/domain/research/research";
+import { OSM_ATTRIBUTION, OSM_COPYRIGHT_URL, OSM_SOURCE_NAME } from "@/domain/sources/osm";
 import { formatDateTime } from "@/lib/formatting/date";
 import { formatDistanceKm } from "@/lib/formatting/numbers";
 import { RESEARCH_STATUS, RESEARCH_TYPE_LABELS, SOURCE_RUN_STATUS } from "@/lib/presentation/labels";
@@ -68,6 +69,7 @@ export default async function ResearchPage({ params }: PageProps<"/pesquisas/[id
   const pendingCount = decisions.filter((value) => value === "pending").length;
   const approvedCount = decisions.filter((value) => value === "approved").length;
   const searched = !preSearch && session.status !== "running";
+  const failedRuns = runs.filter((run) => run.status !== "succeeded" && run.status !== "running").map((run) => run.source_name);
   const steps = [
     { label: "Parâmetros", done: true },
     { label: "Ideias de produto", done: ideas.length > 0 },
@@ -198,7 +200,8 @@ export default async function ResearchPage({ params }: PageProps<"/pesquisas/[id
           <div className="space-y-1">
             <CardTitle>Busca de empresas</CardTitle>
             <CardDescription>
-              Nesta etapa a busca usa somente as empresas já cadastradas (base interna). Fontes externas entram na próxima etapa.
+              Consulta as empresas já cadastradas e o OpenStreetMap dentro do raio. Empresas novas entram no cadastro com a origem
+              registrada; coincidências com empresas existentes são sinalizadas, nunca unidas.
             </CardDescription>
           </div>
           {preSearch ? <RunSearchButton researchSessionId={session.id} disabled={!ready || session.status !== "ready"} /> : null}
@@ -207,7 +210,7 @@ export default async function ResearchPage({ params }: PageProps<"/pesquisas/[id
           {preSearch ? (
             <p className="text-sm text-muted-foreground" aria-live="polite">
               {ready
-                ? `${approvedCount} ideia(s) aprovada(s). A busca procura empresas pelo segmento ou produto da pesquisa e pelos segmentos-alvo das ideias aprovadas.`
+                ? `${approvedCount} ideia(s) aprovada(s). A busca procura empresas pelo segmento ou produto da pesquisa e pelos segmentos-alvo das ideias aprovadas, e calcula a pontuação de cada oportunidade.`
                 : pendingCount
                   ? `${pendingCount} ideia(s) aguardando decisão.`
                   : "Aprove ao menos uma ideia para liberar a busca."}
@@ -225,8 +228,10 @@ export default async function ResearchPage({ params }: PageProps<"/pesquisas/[id
           ) : null}
           {session.status === "partial" ? (
             <Notice tone="warning" title="Resultado parcial">
-              {results.length === 0 ? "Nenhuma empresa encontrada" : `${results.length} empresa(s) encontrada(s)`}; o esperado é de{" "}
-              {RESULT_TARGET.min} a {RESULT_TARGET.max}. Nenhuma empresa foi incluída só para completar a lista.
+              {results.length === 0 ? "Nenhuma empresa encontrada" : `${results.length} empresa(s) encontrada(s)`}
+              {results.length < RESULT_TARGET.min ? `; o esperado é de ${RESULT_TARGET.min} a ${RESULT_TARGET.max}` : ""}. Nenhuma empresa foi
+              incluída só para completar a lista.
+              {failedRuns.length ? ` Fonte(s) com problema: ${failedRuns.join(", ")} — detalhes abaixo.` : ""}
             </Notice>
           ) : null}
 
@@ -252,9 +257,13 @@ export default async function ResearchPage({ params }: PageProps<"/pesquisas/[id
                 <li key={result.company.id} className="rounded-lg border border-border bg-surface-sunken p-4">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
-                      <Link href={`/empresas/${result.company.id}`} className="font-medium break-words hover:underline">
-                        {result.company.name}
-                      </Link>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Link href={`/empresas/${result.company.id}`} className="font-medium break-words hover:underline">
+                          {result.company.name}
+                        </Link>
+                        {result.isNewCompany ? <Badge tone="info">Nova no cadastro</Badge> : null}
+                        {result.possibleDuplicateUrl ? <Badge tone="warning">Possível duplicidade</Badge> : null}
+                      </div>
                       <p className="text-xs text-subtle-foreground">
                         {[result.company.segment, result.company.place].filter(Boolean).join(" · ") || "Segmento e local não informados"}
                       </p>
@@ -266,6 +275,14 @@ export default async function ResearchPage({ params }: PageProps<"/pesquisas/[id
                   <p className="mt-2 text-sm text-muted-foreground">
                     {result.reason} · fonte: {result.source}
                   </p>
+                  {result.possibleDuplicateUrl ? (
+                    <p className="mt-1 text-xs text-warning-text">
+                      <a href={result.possibleDuplicateUrl} target="_blank" rel="noopener noreferrer" className="underline">
+                        Ver o registro no OpenStreetMap
+                      </a>{" "}
+                      e compare com o cadastro antes de usar.
+                    </p>
+                  ) : null}
                   <ul className="mt-3 flex flex-wrap gap-2" aria-label={`Oportunidades com ${result.company.name}`}>
                     {result.opportunities.map((opportunity) => (
                       <li key={opportunity.id}>
@@ -275,6 +292,9 @@ export default async function ResearchPage({ params }: PageProps<"/pesquisas/[id
                         >
                           <Building2 aria-hidden="true" className="size-3" />
                           {opportunity.productName ?? "Sem produto"}
+                          <span className="text-subtle-foreground tabular-nums">
+                            {opportunity.score === null ? "· sem nota" : `· ${opportunity.score.toFixed(0)}${opportunity.isComplete ? "" : "*"}`}
+                          </span>
                         </Link>
                       </li>
                     ))}
@@ -284,7 +304,22 @@ export default async function ResearchPage({ params }: PageProps<"/pesquisas/[id
             </ol>
           ) : searched && session.status !== "failed" ? (
             <p className="text-sm text-muted-foreground">
-              Nenhuma empresa cadastrada corresponde à pesquisa. Cadastre empresas em <Link href="/empresas/nova" className="underline">Empresas</Link> e execute novamente.
+              Nenhuma empresa encontrada nas fontes consultadas. Você pode cadastrar empresas em <Link href="/empresas/nova" className="underline">Empresas</Link> e executar a pesquisa novamente.
+            </p>
+          ) : null}
+
+          {results.length ? (
+            <p className="text-xs text-subtle-foreground">
+              * nota calculada com dados incompletos (a página da oportunidade mostra a faixa possível e o que falta).
+              {results.some((result) => result.source.includes(OSM_SOURCE_NAME)) ? (
+                <>
+                  {" "}Dados de estabelecimentos{" "}
+                  <a href={OSM_COPYRIGHT_URL} target="_blank" rel="noopener noreferrer" className="underline">
+                    {OSM_ATTRIBUTION}
+                  </a>
+                  .
+                </>
+              ) : null}
             </p>
           ) : null}
         </CardContent>

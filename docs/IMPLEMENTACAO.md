@@ -300,3 +300,102 @@
 - A pontuação automática das oportunidades criadas pela busca entra na
   etapa 6, junto com as fontes externas e a geocodificação.
 - A lista de Produtos e ideias mostra até 300 ideias, sem paginação.
+
+## Etapa 6 — Fontes externas e pontuação automática (23/10/2026)
+
+### Implementado
+- **OpenStreetMap na busca** (`src/domain/sources/osm.ts`, `src/server/integrations/overpass.ts`):
+  - uma consulta Overpass por busca, com estabelecimentos com nome no raio a
+    partir do ponto de referência da pesquisa;
+  - categorias traduzidas para português;
+  - limite de 100 consultas por dia, pela política da instância pública;
+  - atribuição "© colaboradores do OpenStreetMap (ODbL)" na pesquisa e na
+    empresa.
+- **Comparação de termos** sem diferenciar plural, gênero, acentos ou
+  maiúsculas (`termMatches`). A pesquisa pode ter vários termos separados por
+  vírgula, ";", "/" ou "ou".
+- **Junção das fontes** (`mergeCandidates`): cada empresa aparece uma vez,
+  com as fontes que a encontraram; máximo de 10 empresas.
+- **Empresas vindas do OpenStreetMap**:
+  - **mesmo registro já importado:** reaproveita a empresa;
+  - **coincide com uma empresa cadastrada** (CNPJ, site, telefone ou nome):
+    usa a empresa existente, marca "Possível duplicidade" com o link do
+    registro, e não copia nem une dados;
+  - **empresa nova:** entra no cadastro com origem por campo ("declarada pela
+    fonte") e com o registro em `company_sources`. Telefone só é aceito com
+    DDD.
+- **Completar pelo CNPJ (BrasilAPI)**, na página da empresa:
+  - preenche só campos vazios (segmento pelo CNAE, endereço, bairro, cidade,
+    UF, CEP);
+  - guarda situação cadastral, CNAE, porte, início das atividades e MEI;
+  - não importa telefone nem e-mail, nem a razão social de MEI (LGPD);
+  - avisa quando a situação não é "ativa";
+  - CNPJ com letras: avisa que a consulta pública ainda não aceita.
+- **Localizar pelo endereço (Nominatim)**:
+  - só para empresas sem coordenadas;
+  - no máximo 1 requisição por segundo;
+  - recusa resultado impreciso (bairro ou cidade inteira);
+  - a posição fica "declarada pela fonte", ou seja, não confirmada, e a
+    proximidade continua limitada a 75 (DP-09).
+- **Pontuação automática a cada busca** (`src/server/scoring.ts`): grava uma
+  nova linha em `opportunity_scores` e `score_breakdowns`; a anterior fica no
+  histórico.
+  - **Proximidade:** pela distância até o ponto de referência da pesquisa.
+  - **Compatibilidade, viabilidade e potencial comercial:**
+    - com a IA configurada, uma chamada por busca, com até 40 combinações
+      empresa × produto. A IA recebe só nome, categoria e bairro/cidade das
+      empresas. As notas entram como "inferência da IA", com justificativa e
+      aviso; "inviável" aplica o teto 39;
+    - sem IA, esses três critérios ficam desconhecidos. A nota aparece como
+      incompleta, com a faixa possível (ver DP-27).
+  - Sem nenhum critério avaliado, nada é gravado e a tela mostra "sem nota".
+- A página da oportunidade mostra a justificativa, a fonte e os avisos de
+  cada critério. A página da pesquisa mostra a nota de cada oportunidade e as
+  fontes com problema.
+- Adaptador do Gemini generalizado (`generateJsonWithGemini`), com o esquema
+  de validação passado por parâmetro.
+- Migration `20261023000600_sources_and_scoring.sql`:
+  - `ai_usage_log` aceita a finalidade `opportunity_assessment`;
+  - `research_session_results` ganha `is_new_company` e
+    `possible_duplicate_url` (só http/https).
+
+### Testes executados (resultados reais)
+- `npm run typecheck`, `npm run lint`: sem erros.
+- `npm run build`: sucesso.
+- Vitest: 132 testes passando, 111 unitários e 21 de integração. Os novos
+  testes cobrem:
+  - comparação de termos;
+  - conversão do OpenStreetMap e da BrasilAPI;
+  - escolha do resultado do Nominatim;
+  - critérios avaliados pela IA ou desconhecidos, e o teto de inviável;
+  - instruções da IA sem dados de contato;
+  - adaptadores com respostas simuladas;
+  - nova restrição do banco.
+- Playwright: 42 testes passando, em duas execuções seguidas.
+  - Os novos testes usam um servidor simulado das fontes
+    (`tests/e2e/support/mock-sources.mjs`).
+  - Cobrem importação, pontuação, aviso de duplicidade, reaproveitamento na
+    nova execução, falha do OpenStreetMap comunicada, BrasilAPI e Nominatim.
+- Verificação visual da pesquisa, da empresa importada e da oportunidade, em
+  1440 px e em celular.
+- **Não testado contra os serviços reais:**
+  - Overpass, BrasilAPI e Nominatim continuam bloqueados pela rede do
+    ambiente (A-03);
+  - a avaliação pelo Gemini depende da chave (A-02).
+
+### Problemas encontrados e corrigidos
+- **Comparação de termos permissiva demais:** "segmento…" casava com
+  "Segmento manual" porque uma palavra começava com a outra. Agora só aceita
+  variações curtas da mesma palavra, com teste de regressão.
+- **Teste E2E de completar pelo CNPJ:** esperava preencher cidade e UF, que
+  já vêm no cadastro novo (Joinville–SC). O sistema estava certo; o teste foi
+  ajustado.
+
+### Pendências
+- DP-27: decidir se a nota deve aparecer quando só a proximidade é conhecida.
+- A-02 e A-03 para testar com os serviços reais.
+- Etapa 7:
+  - tela de revisão das possíveis duplicidades;
+  - importação dos dados abertos do CNPJ;
+  - confirmação de localização;
+  - relatórios e exportação CSV.

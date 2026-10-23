@@ -20,6 +20,10 @@ import type { Json } from "@/lib/supabase/database.types";
 import type { Tables } from "@/lib/supabase/types";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formValues, readChecked, readText, type FormValues } from "@/lib/validation/form-data";
+import { BRASILAPI_SOURCE_NAME, enrichFromCnpj } from "@/domain/sources/brasilapi";
+import { GEOCODING_SOURCE_NAME, geocodingQuery } from "@/domain/sources/geocoding";
+import { fetchCnpj } from "@/server/integrations/brasilapi";
+import { geocodeAddress } from "@/server/integrations/nominatim";
 import { companiesMatching } from "@/server/repositories/companies";
 
 export type CompanyFormState = {
@@ -187,4 +191,127 @@ export async function saveCompany(_previous: CompanyFormState, formData: FormDat
   revalidatePath("/empresas");
   revalidatePath("/dashboard");
   redirect(`/empresas/${savedId}?salvo=1`);
+}
+
+// -----------------------------------------------------------------------------
+// Fontes externas sob demanda (só completam campos vazios)
+// -----------------------------------------------------------------------------
+
+type SourceActionState = { status: "success" | "error"; message: string; submittedAt: number };
+
+function sourceResult(status: SourceActionState["status"], message: string): SourceActionState {
+  return { status, message, submittedAt: Date.now() };
+}
+
+/** BrasilAPI: completa segmento e endereço a partir do CNPJ; guarda situação cadastral, CNAE e porte. */
+export async function enrichCompanyFromCnpj(input: { companyId: string }): Promise<SourceActionState> {
+  await requireActiveMember();
+  if (!idSchema.safeParse(input.companyId).success) return sourceResult("error", "Empresa inválida.");
+  const supabase = await createSupabaseServerClient();
+  const company = await supabase.from("companies").select("*").eq("id", input.companyId).maybeSingle();
+  if (company.error || !company.data) return sourceResult("error", "Empresa não encontrada.");
+  if (!company.data.cnpj) return sourceResult("error", "Cadastre o CNPJ antes de consultar.");
+
+  const response = await fetchCnpj(company.data.cnpj);
+  if (!response.ok) return sourceResult("error", response.message);
+
+  const observedAt = new Date().toISOString();
+  const enrichment = enrichFromCnpj(rowToDraft(company.data), response.data);
+  const provenance = { ...((company.data.field_provenance ?? {}) as ProvenanceMap) };
+  for (const field of enrichment.filled) provenance[field] = { status: "source_declared", source: BRASILAPI_SOURCE_NAME, observedAt };
+
+  if (enrichment.filled.length) {
+    const { changes } = enrichment;
+    const updated = await supabase
+      .from("companies")
+      .update({
+        ...(changes.segment ? { segment: changes.segment } : {}),
+        ...(changes.address ? { address: changes.address } : {}),
+        ...(changes.neighborhood ? { neighborhood: changes.neighborhood } : {}),
+        ...(changes.city ? { city: changes.city } : {}),
+        ...(changes.state ? { state: changes.state } : {}),
+        ...(changes.postalCode ? { postal_code: changes.postalCode } : {}),
+        field_provenance: provenance as unknown as NonNullable<Json>,
+      })
+      .eq("id", input.companyId);
+    if (updated.error) return sourceResult("error", "Os dados chegaram, mas não puderam ser gravados.");
+  }
+
+  const metadata = { ...enrichment.metadata, consultadoEm: observedAt } as unknown as NonNullable<Json>;
+  const existing = await supabase
+    .from("company_sources")
+    .select("id")
+    .eq("source_name", BRASILAPI_SOURCE_NAME)
+    .eq("source_record_id", company.data.cnpj)
+    .maybeSingle();
+  const source = existing.data
+    ? await supabase.from("company_sources").update({ last_verified_at: observedAt, evidence_metadata: metadata }).eq("id", existing.data.id)
+    : await supabase.from("company_sources").insert({
+        company_id: input.companyId,
+        source_name: BRASILAPI_SOURCE_NAME,
+        source_record_id: company.data.cnpj,
+        last_verified_at: observedAt,
+        evidence_metadata: metadata,
+      });
+  if (source.error) return sourceResult("error", "Os dados foram completados, mas o registro da fonte falhou.");
+
+  revalidatePath(`/empresas/${input.companyId}`);
+  revalidatePath("/empresas");
+  const filled = enrichment.filled.map((field) => FIELD_NAMES[field] ?? field);
+  const parts = [filled.length ? `Completado: ${filled.join(", ")}` : "Nenhum campo vazio para completar"];
+  if (enrichment.isActive === false) parts.push(`atenção: situação cadastral “${enrichment.metadata.situacao}”`);
+  return sourceResult("success", `${parts.join(" · ")}.`);
+}
+
+const FIELD_NAMES: Partial<Record<string, string>> = {
+  segment: "segmento",
+  address: "endereço",
+  neighborhood: "bairro",
+  city: "cidade",
+  state: "UF",
+  postalCode: "CEP",
+};
+
+/** Nominatim: localização aproximada pelo endereço, só quando a empresa ainda não tem coordenadas. */
+export async function geocodeCompany(input: { companyId: string }): Promise<SourceActionState> {
+  await requireActiveMember();
+  if (!idSchema.safeParse(input.companyId).success) return sourceResult("error", "Empresa inválida.");
+  const supabase = await createSupabaseServerClient();
+  const company = await supabase.from("companies").select("*").eq("id", input.companyId).maybeSingle();
+  if (company.error || !company.data) return sourceResult("error", "Empresa não encontrada.");
+  if (company.data.latitude !== null) return sourceResult("error", "A empresa já tem localização. Para trocar, edite o cadastro.");
+  const query = geocodingQuery(rowToDraft(company.data));
+  if (!query) return sourceResult("error", "Cadastre endereço e cidade antes de localizar.");
+
+  const result = await geocodeAddress(query);
+  if (!result.ok) {
+    if ("message" in result) return sourceResult("error", result.message);
+    return sourceResult(
+      "error",
+      result.reason === "not_found" ? "Endereço não encontrado. Confira o cadastro." : "O endereço só foi localizado de forma aproximada demais (bairro ou cidade).",
+    );
+  }
+
+  const observedAt = new Date().toISOString();
+  const provenance = {
+    ...((company.data.field_provenance ?? {}) as ProvenanceMap),
+    location: {
+      status: "source_declared" as const,
+      source: `${GEOCODING_SOURCE_NAME} — ${result.precision === "street" ? "posição aproximada na rua" : "pelo endereço"}`,
+      observedAt,
+    },
+  };
+  const updated = await supabase
+    .from("companies")
+    .update({
+      latitude: result.latitude,
+      longitude: result.longitude,
+      location_status: "source_declared",
+      field_provenance: provenance as unknown as NonNullable<Json>,
+    })
+    .eq("id", input.companyId);
+  if (updated.error) return sourceResult("error", "A localização foi encontrada, mas não pôde ser gravada.");
+  revalidatePath(`/empresas/${input.companyId}`);
+  revalidatePath("/empresas");
+  return sourceResult("success", "Localização encontrada pelo endereço. Ela ainda não está confirmada.");
 }

@@ -80,8 +80,8 @@ Revisão do modelo sugerido na especificação:
 | 3 | Empresas: tabela com busca/filtros/paginação, cadastro e edição manuais, detalhes com fontes e evidências | **Concluída** |
 | 4 | Oportunidades e pipeline: salvar, status, observações, contatos, colunas + tabela, histórico | **Concluída** |
 | 5 | Nova prospecção (fluxo guiado) + Produtos e ideias com aprovação individual e detecção de duplicidade; IA (Gemini) trocável com limite diário; busca na base interna; pesquisas anteriores e nova execução | **Concluída** |
-| 6 | Fontes empresariais reais (OpenStreetMap, CNPJ, BrasilAPI), geocodificação e pontuação automática nas pesquisas — após liberar a rede (A-03) | Próxima |
-| 7 | Deduplicação com revisão humana para dados das fontes, relatórios, exportação CSV | |
+| 6 | OpenStreetMap na busca, BrasilAPI e geocodificação sob demanda, pontuação automática nas pesquisas (proximidade + avaliação da IA) | **Concluída** (testada com servidor simulado; rede real pendente, A-03) |
+| 7 | Revisão humana das possíveis duplicidades, importação dos dados abertos do CNPJ, confirmação de localização, relatórios, exportação CSV | Próxima |
 | 8 | Revisão de acessibilidade, segurança, desempenho; implantação | |
 
 ## 5. Riscos técnicos e dependências externas

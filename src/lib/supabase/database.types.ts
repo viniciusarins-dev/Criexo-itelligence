@@ -353,14 +353,14 @@ isOneToOne: false
                   ]
                 },"research_session_results": {
                   Row: {
-                    "company_id": string,"created_at": string,"id": number,"match_reason": string,"opportunity_id": string,"product_idea_id": string | null,"rank": number,"research_session_id": string,"source_name": string
+                    "company_id": string,"created_at": string,"id": number,"is_new_company": boolean,"match_reason": string,"opportunity_id": string,"possible_duplicate_url": string | null,"product_idea_id": string | null,"rank": number,"research_session_id": string,"source_name": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "company_id": string,"created_at"?: string,"id"?: never,"match_reason": string,"opportunity_id": string,"product_idea_id"?: string | null,"rank": number,"research_session_id": string,"source_name": string
+                    "company_id": string,"created_at"?: string,"id"?: never,"is_new_company"?: boolean,"match_reason": string,"opportunity_id": string,"possible_duplicate_url"?: string | null,"product_idea_id"?: string | null,"rank": number,"research_session_id": string,"source_name": string
                   }
                   Update: {
-                    "company_id"?: string,"created_at"?: string,"id"?: never,"match_reason"?: string,"opportunity_id"?: string,"product_idea_id"?: string | null,"rank"?: number,"research_session_id"?: string,"source_name"?: string
+                    "company_id"?: string,"created_at"?: string,"id"?: never,"is_new_company"?: boolean,"match_reason"?: string,"opportunity_id"?: string,"possible_duplicate_url"?: string | null,"product_idea_id"?: string | null,"rank"?: number,"research_session_id"?: string,"source_name"?: string
                   }
                   Relationships: [
                     {

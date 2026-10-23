@@ -91,7 +91,8 @@ test.describe("prospecção", () => {
     await expect(results.getByRole("link", { name: companyName })).toBeVisible();
     await expect(results.getByText(/Segmento “.*” corresponde à pesquisa · fonte: Base interna/)).toBeVisible();
     // Só a ideia aprovada gera oportunidade.
-    await expect(results.getByRole("link", { name: ideaName, exact: true })).toBeVisible();
+    // O link da oportunidade mostra o produto e a nota (sem localização nem IA, "sem nota").
+    await expect(results.getByRole("link", { name: `${ideaName} · sem nota`, exact: true })).toBeVisible();
     await expect(results.getByRole("link", { name: similarName })).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
 

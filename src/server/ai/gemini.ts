@@ -1,8 +1,16 @@
+import type { z } from "zod";
+
 import { aiIdeasResponseSchema, type AiIdea } from "@/domain/ideas/idea";
 
-export type GenerationResult =
-  | { ok: true; ideas: AiIdea[] }
-  | { ok: false; code: "unauthorized" | "rate_limited" | "unavailable" | "timeout" | "invalid_output" | "blocked"; message: string };
+export type AiFailure = {
+  ok: false;
+  code: "unauthorized" | "rate_limited" | "unavailable" | "timeout" | "invalid_output" | "blocked";
+  message: string;
+};
+
+export type GenerationResult = { ok: true; ideas: AiIdea[] } | AiFailure;
+
+type GeminiOptions = { apiKey: string; model: string; fetchImpl?: typeof fetch; timeoutMs?: number; temperature?: number };
 
 const ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models";
 const TIMEOUT_MS = 45_000;
@@ -33,12 +41,13 @@ type GeminiResponse = {
 
 /**
  * Adaptador do Gemini (API REST). Recebe `fetch` por parâmetro para poder ser
- * testado sem rede. A resposta só é aceita se passar pela validação do domínio.
+ * testado sem rede. A resposta só é aceita se passar pelo esquema informado.
  */
-export async function generateIdeasWithGemini(
+export async function generateJsonWithGemini<T extends z.ZodType>(
   prompt: string,
-  options: { apiKey: string; model: string; fetchImpl?: typeof fetch; timeoutMs?: number },
-): Promise<GenerationResult> {
+  schema: T,
+  options: GeminiOptions,
+): Promise<{ ok: true; data: z.output<T> } | AiFailure> {
   const fetchImpl = options.fetchImpl ?? fetch;
   let response: Response;
   try {
@@ -47,7 +56,7 @@ export async function generateIdeasWithGemini(
       headers: { "Content-Type": "application/json", "x-goog-api-key": options.apiKey },
       body: JSON.stringify({
         contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: { responseMimeType: "application/json", temperature: 0.7 },
+        generationConfig: { responseMimeType: "application/json", temperature: options.temperature ?? 0.7 },
       }),
       signal: AbortSignal.timeout(options.timeoutMs ?? TIMEOUT_MS),
       cache: "no-store",
@@ -79,9 +88,14 @@ export async function generateIdeasWithGemini(
     return { ok: false, code: "blocked", message: "A IA recusou o pedido." };
   }
   const text = body.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("") ?? "";
-  const parsed = aiIdeasResponseSchema.safeParse(extractJson(text));
+  const parsed = schema.safeParse(extractJson(text));
   if (!parsed.success) {
-    return { ok: false, code: "invalid_output", message: "A IA respondeu fora do formato esperado. Nenhuma sugestão foi gravada." };
+    return { ok: false, code: "invalid_output", message: "A IA respondeu fora do formato esperado. Nada foi gravado." };
   }
-  return { ok: true, ideas: parsed.data.ideas };
+  return { ok: true, data: parsed.data };
+}
+
+export async function generateIdeasWithGemini(prompt: string, options: GeminiOptions): Promise<GenerationResult> {
+  const result = await generateJsonWithGemini(prompt, aiIdeasResponseSchema, options);
+  return result.ok ? { ok: true, ideas: result.data.ideas } : result;
 }

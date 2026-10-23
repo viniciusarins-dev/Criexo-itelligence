@@ -170,9 +170,16 @@ export type ScoreBreakdownItem = {
   weightedScore: number | null;
   informationStatus: Enums<"information_status">;
   missingData: string[];
+  evidence: { statement: string; source: string | null }[];
+  notes: string[];
 };
 
 const uuidSchema = z.uuid();
+
+function criterionNotes(explanation: unknown, criterion: string): string[] {
+  const notes = (explanation as { notes?: Record<string, unknown> } | null)?.notes?.[criterion];
+  return Array.isArray(notes) ? notes.filter((note): note is string => typeof note === "string") : [];
+}
 
 export async function getOpportunity(id: string) {
   await requireActiveMember();
@@ -202,7 +209,7 @@ export async function getOpportunity(id: string) {
     opportunity.data.current_score_id
       ? supabase
           .from("opportunity_scores")
-          .select("score, score_min, score_max, stars, confidence, is_complete, computed_at, score_version, breakdowns:score_breakdowns(criterion, weight, raw_score, weighted_score, information_status, missing_data)")
+          .select("score, score_min, score_max, stars, confidence, is_complete, computed_at, score_version, explanation, breakdowns:score_breakdowns(criterion, weight, raw_score, weighted_score, information_status, missing_data, evidence)")
           .eq("id", opportunity.data.current_score_id)
           .maybeSingle()
       : Promise.resolve({ data: null, error: null }),
@@ -244,6 +251,12 @@ export async function getOpportunity(id: string) {
               weightedScore: item.weighted_score === null ? null : Number(item.weighted_score),
               informationStatus: item.information_status,
               missingData: Array.isArray(item.missing_data) ? (item.missing_data as string[]) : [],
+              evidence: Array.isArray(item.evidence)
+                ? (item.evidence as { statement?: unknown; source?: unknown }[])
+                    .filter((entry) => typeof entry?.statement === "string")
+                    .map((entry) => ({ statement: entry.statement as string, source: typeof entry.source === "string" ? entry.source : null }))
+                : [],
+              notes: criterionNotes(score.data!.explanation, item.criterion),
             }),
           ),
         }

@@ -260,7 +260,9 @@ export async function getResearch(id: string) {
     supabase.from("research_source_runs").select("*").eq("research_session_id", id).order("created_at"),
     supabase
       .from("research_session_results")
-      .select("rank, match_reason, source_name, opportunity_id, company:companies!inner(id, name, segment, neighborhood, city), idea:product_ideas(name)")
+      .select(
+        "rank, match_reason, source_name, opportunity_id, is_new_company, possible_duplicate_url, company:companies!inner(id, name, segment, neighborhood, city), idea:product_ideas(name), opportunity:opportunities!inner(score, score_is_complete)",
+      )
       .eq("research_session_id", id)
       .order("rank"),
     supabase.from("profiles").select("id, display_name"),
@@ -280,7 +282,19 @@ export async function getResearch(id: string) {
   }
 
   // Agrupa por empresa: cada empresa aparece uma vez, com as oportunidades (produtos) ligadas a ela.
-  const grouped = new Map<string, { rank: number; company: { id: string; name: string; segment: string | null; place: string | null }; distanceKm: number | null; reason: string; source: string; opportunities: { id: string; productName: string | null }[] }>();
+  const grouped = new Map<
+    string,
+    {
+      rank: number;
+      company: { id: string; name: string; segment: string | null; place: string | null };
+      distanceKm: number | null;
+      reason: string;
+      source: string;
+      isNewCompany: boolean;
+      possibleDuplicateUrl: string | null;
+      opportunities: { id: string; productName: string | null; score: number | null; isComplete: boolean }[];
+    }
+  >();
   for (const row of results.data ?? []) {
     const entry = grouped.get(row.company.id) ?? {
       rank: row.rank,
@@ -293,9 +307,16 @@ export async function getResearch(id: string) {
       distanceKm: distances.get(row.company.id) ?? null,
       reason: row.match_reason,
       source: row.source_name,
+      isNewCompany: row.is_new_company,
+      possibleDuplicateUrl: row.possible_duplicate_url,
       opportunities: [],
     };
-    entry.opportunities.push({ id: row.opportunity_id, productName: row.idea?.name ?? null });
+    entry.opportunities.push({
+      id: row.opportunity_id,
+      productName: row.idea?.name ?? null,
+      score: row.opportunity.score === null ? null : Number(row.opportunity.score),
+      isComplete: row.opportunity.score_is_complete ?? false,
+    });
     grouped.set(row.company.id, entry);
   }
 

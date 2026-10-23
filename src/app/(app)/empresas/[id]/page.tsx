@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { InformationBadge } from "@/components/companies/information-badge";
+import { SourceActions } from "@/components/companies/source-actions";
 import { CreateOpportunityForm } from "@/components/opportunities/create-opportunity-form";
 import { EmptyState } from "@/components/states/empty-state";
 import { Notice } from "@/components/states/notice";
@@ -13,6 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Stars } from "@/components/ui/stars";
 import type { TrackedField } from "@/domain/companies/company";
 import { formatCnpj } from "@/domain/rules/normalization";
+import { OSM_ATTRIBUTION, OSM_COPYRIGHT_URL, OSM_SOURCE_NAME } from "@/domain/sources/osm";
 import { formatDateTime } from "@/lib/formatting/date";
 import { formatDistanceKm, formatPhoneBr, formatPostalCode } from "@/lib/formatting/numbers";
 import { ACTIVITY_LABELS } from "@/lib/presentation/labels";
@@ -42,6 +44,23 @@ function Item({ label, children }: { label: string; children: React.ReactNode })
       <dd className="min-w-0 text-sm text-foreground break-words">{children}</dd>
     </div>
   );
+}
+
+/** Informações guardadas com a fonte (BrasilAPI e OpenStreetMap), em linguagem simples. */
+function sourceFacts(metadata: unknown): string[] {
+  if (!metadata || typeof metadata !== "object") return [];
+  const data = metadata as Record<string, unknown>;
+  const text = (key: string) => (typeof data[key] === "string" && data[key] ? (data[key] as string) : null);
+  const facts: string[] = [];
+  if (text("situacao")) facts.push(`Situação cadastral: ${text("situacao")}`);
+  if (text("cnae")) facts.push(`CNAE: ${text("cnae")}`);
+  if (text("porte")) facts.push(`Porte: ${text("porte")}`);
+  if (text("inicioAtividade")) facts.push(`Início das atividades: ${text("inicioAtividade")}`);
+  if (data.isMei === true) facts.push("Optante pelo MEI");
+  if (text("nomeFantasia")) facts.push(`Nome fantasia: ${text("nomeFantasia")}`);
+  if (text("razaoSocial")) facts.push(`Razão social: ${text("razaoSocial")}`);
+  if (text("category")) facts.push(`Categoria: ${text("category")}`);
+  return facts;
 }
 
 function Unknown() {
@@ -163,6 +182,29 @@ export default async function CompanyPage({ params, searchParams }: PageProps<"/
       <Card>
         <CardHeader>
           <div className="space-y-1">
+            <CardTitle>Completar com fontes públicas</CardTitle>
+            <CardDescription>Nada informado no cadastro é substituído. Os dados entram como “declarados pela fonte”.</CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <SourceActions
+            companyId={company.id}
+            cnpj={company.cnpj}
+            canGeocode={company.latitude === null && Boolean(company.address && company.city)}
+            geocodeHint={
+              company.latitude !== null
+                ? "A empresa já tem localização. Para trocar, edite o cadastro."
+                : company.address && company.city
+                  ? "Consulta o Nominatim (OpenStreetMap). A posição fica como não confirmada até alguém conferir."
+                  : "Cadastre endereço e cidade para localizar."
+            }
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="space-y-1">
             <CardTitle>Origem das informações</CardTitle>
             <CardDescription>De onde veio cada dado e quando foi registrado.</CardDescription>
           </div>
@@ -214,20 +256,52 @@ export default async function CompanyPage({ params, searchParams }: PageProps<"/
             <EmptyState
               icon={FileSearch}
               title="Nenhuma fonte externa"
-              description="Esta empresa foi cadastrada manualmente. As fontes aparecem aqui quando a empresa for encontrada por uma pesquisa."
+              description="Nenhuma fonte externa ligada a esta empresa. Elas aparecem quando uma pesquisa a encontra ou quando você completa os dados pelo CNPJ."
               className="py-6"
             />
           ) : (
             <ul className="divide-y divide-border">
-              {details.sources.map((source) => (
-                <li key={source.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-sm">
-                  <span className="font-medium">{source.source_name}</span>
-                  <span className="text-xs text-muted-foreground">
-                    Coletado em {formatDateTime(source.collected_at)}
-                    {source.last_verified_at ? ` · verificado em ${formatDateTime(source.last_verified_at)}` : ""}
-                  </span>
-                </li>
-              ))}
+              {details.sources.map((source) => {
+                const facts = sourceFacts(source.evidence_metadata);
+                return (
+                  <li key={source.id} className="space-y-1.5 py-2.5 text-sm">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      {source.source_url ? (
+                        <a
+                          href={source.source_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 font-medium text-primary-text underline-offset-4 hover:underline"
+                        >
+                          {source.source_name}
+                          <ExternalLink aria-hidden="true" className="size-3" />
+                        </a>
+                      ) : (
+                        <span className="font-medium">{source.source_name}</span>
+                      )}
+                      <span className="text-xs text-muted-foreground">
+                        Coletado em {formatDateTime(source.collected_at)}
+                        {source.last_verified_at ? ` · verificado em ${formatDateTime(source.last_verified_at)}` : ""}
+                      </span>
+                    </div>
+                    {facts.length ? (
+                      <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                        {facts.map((fact) => (
+                          <li key={fact}>{fact}</li>
+                        ))}
+                      </ul>
+                    ) : null}
+                    {source.source_name === OSM_SOURCE_NAME ? (
+                      <p className="text-xs text-subtle-foreground">
+                        Dados{" "}
+                        <a href={OSM_COPYRIGHT_URL} target="_blank" rel="noopener noreferrer" className="underline">
+                          {OSM_ATTRIBUTION}
+                        </a>
+                      </p>
+                    ) : null}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </CardContent>
