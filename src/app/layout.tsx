@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { connection } from "next/server";
 import { Montserrat } from "next/font/google";
 import type { ReactNode } from "react";
 
@@ -24,7 +25,9 @@ export const viewport: Viewport = {
   colorScheme: "dark",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  // Todas as páginas são renderizadas por requisição: o nonce da CSP muda a cada uma.
+  await connection();
   return (
     <html lang="pt-BR" className={montserrat.variable}>
       <body className="min-h-dvh">

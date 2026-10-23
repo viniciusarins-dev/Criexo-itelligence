@@ -189,7 +189,17 @@ provedores.
   alterados nem apagados pela API.
 - **Migrations novas** que criem tabelas devem revogar os privilégios padrão
   de `anon`/`authenticated` e conceder apenas o necessário (ver comentário na
-  migration inicial).
+  migration inicial). O teste de integração "invariantes de segurança do
+  banco" falha se alguma tabela ficar sem RLS, se o `anon` receber qualquer
+  privilégio ou se uma função privilegiada ficar sem `search_path` fixo.
+- **Content Security Policy com nonce por requisição** (`src/lib/security/csp.ts`):
+  só scripts do próprio site, nenhuma origem externa, sem uso em iframe.
+  Também: HSTS, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`,
+  `Cross-Origin-Opener-Policy`.
+- Redirecionamento depois do login só para caminhos internos (validado pelo
+  parser de URL).
+- CSV exportado protegido contra fórmulas (CSV injection).
+- Tentativas de login: os limites de taxa ficam a cargo do Supabase Auth.
 
 ## Limitações conhecidas
 
@@ -201,7 +211,11 @@ provedores.
 
 ## Implantação
 
-Qualquer plataforma compatível com Next.js (ex.: Vercel). Configure
-`NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` no
-ambiente de build (são embutidas no build) e inclua a URL de produção em
-**Authentication → URL Configuration** do Supabase.
+Passo a passo completo (Supabase + Vercel, plano gratuito) em
+`docs/IMPLANTACAO.md`. Resumo: aplique as migrations com `supabase db push`,
+desligue o cadastro público no Supabase, configure
+`NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` na Vercel
+e inclua a URL de produção em **Authentication → URL Configuration**.
+
+A CI (`.github/workflows/ci.yml`) roda lint, tipos, testes unitários, build,
+auditoria de dependências e os testes de integração em um Supabase local.

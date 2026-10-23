@@ -490,3 +490,93 @@
 - A importação real dos dados do CNPJ depende de baixar os arquivos do mês;
   só foi testada com arquivos fictícios.
 - Etapa 8: revisão de acessibilidade, segurança e desempenho; implantação.
+
+## Etapa 8 — Acessibilidade, segurança, desempenho e implantação (23/10/2026)
+
+### Acessibilidade
+- **Teste automático com axe (WCAG 2.1 A/AA)** em todas as telas, desktop e
+  celular, incluindo as de detalhe quando há dados
+  (`tests/e2e/accessibility.spec.ts`).
+- **Corrigido:**
+  - **Contraste do texto mais apagado:** subia para 3,8:1 nas superfícies
+    claras; com o token `--subtle-foreground` ajustado chega a ≥ 4,77:1 em
+    todas.
+  - **Pipeline:** o link "Somente salvas" usava `aria-pressed`, que só vale
+    para botões; passou a usar `aria-current`.
+  - **Login no celular:** o título principal ficava escondido; agora o
+    título é "Entrar".
+  - **Tabelas largas:** as que rolam na horizontal passaram a receber foco
+    pelo teclado.
+- Teste só pelo teclado: entrar e usar o atalho "Pular para o conteúdo".
+
+### Segurança
+- **Content Security Policy com nonce novo a cada requisição**, em
+  `src/proxy.ts` e `src/lib/security/csp.ts`:
+  - só scripts do próprio site;
+  - nenhuma origem externa;
+  - `frame-ancestors 'none'`;
+  - `upgrade-insecure-requests` em HTTPS;
+  - todas as páginas renderizadas por requisição (`connection()` no layout
+    raiz).
+- **Novos cabeçalhos:** HSTS e `Cross-Origin-Opener-Policy`.
+- **Redirecionamento aberto corrigido:** `next=/<TAB>/site.com` passava pelo
+  filtro e o navegador o transformava em `//site.com`. A validação agora
+  usa o parser de URL e recusa caracteres de controle e barras invertidas,
+  com testes.
+- **Banco:**
+  - novo teste de integração verifica que toda tabela tem RLS, que o
+    `anon` não tem nenhum privilégio, que as funções privilegiadas têm
+    `search_path` fixo, que as views respeitam o RLS de quem consulta e que
+    nenhum papel apaga dados;
+  - `set_updated_at()` deixou de ser executável pela API (o gatilho
+    continua funcionando; conferido).
+- **Autenticação local:** cadastro público desligado e senha mínima de 10
+  caracteres com letras e números (`supabase/config.toml`). O guia de
+  implantação repete isso para o projeto na nuvem.
+- **Revisão manual dos pontos sensíveis:**
+  - toda Server Action verifica a sessão;
+  - as ações de administrador verificam o papel no servidor e no banco;
+  - links externos têm `rel="noopener"`;
+  - não há `dangerouslySetInnerHTML`;
+  - mensagens de erro não expõem detalhes internos;
+  - `.env*` está no `.gitignore`.
+- `npm audit --omit=dev`: 0 vulnerabilidades.
+
+### Desempenho
+- **Índices para as consultas do app:** oportunidades por produto e por
+  data; empresas por data; novas execuções; limite diário por fonte;
+  resultados por empresa e por oportunidade; revisões por empresa.
+- **Zod fora do navegador:** cinco componentes puxavam a biblioteca de
+  validação (cerca de 100 KB) por importar módulos do domínio. Constantes e
+  regras simples foram separadas em módulos sem dependências
+  (`statuses.ts`, `production-options.ts`, `research/types.ts`,
+  `companies/options.ts`); os módulos originais reexportam tudo.
+- **Motion carregado com `LazyMotion` + `domAnimation`.**
+- **Medido:** cerca de 765 KB de JavaScript descompactado (cerca de 250 KB
+  transferidos com compressão) por tela, a maior parte do React e do
+  Next.js.
+
+### Implantação
+- **CI no GitHub** (`.github/workflows/ci.yml`):
+  - lint, tipos, testes unitários, build e `npm audit`;
+  - um segundo job aplica as migrations em um Supabase local e roda os
+    testes de integração. Esse job não pôde ser executado aqui (sem
+    Docker): conferir na primeira execução no GitHub.
+- **Guia passo a passo** (`docs/IMPLANTACAO.md`), com Supabase e Vercel no
+  plano gratuito, região São Paulo, variáveis, conferência depois do deploy,
+  cópia de segurança semanal e pausa por inatividade.
+
+### Testes executados (resultados reais)
+- `npm run typecheck`, `npm run lint` e `npm run build`: sem erros.
+- Vitest: 153 testes passando, 126 unitários e 27 de integração.
+- Playwright: 56 testes passando, em duas execuções seguidas. Incluem axe
+  em todas as telas, uso só pelo teclado e cabeçalhos de segurança.
+- Conferido à mão: login, navegação e menu do celular com a CSP ativa, sem
+  nenhum erro no console.
+
+### Pendências
+- Publicar seguindo `docs/IMPLANTACAO.md` (contas Supabase e Vercel da
+  CRIEXO).
+- Conferir o job de banco da CI na primeira execução no GitHub.
+- Revisão manual com leitor de tela antes do uso diário.
+- DP-27, DP-18, A-02 e A-03 continuam abertas.

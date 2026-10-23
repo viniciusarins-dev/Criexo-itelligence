@@ -1,6 +1,6 @@
 # Critérios de aceitação — MVP
 
-Situação em 23/10/2026 (fim da etapa 7). "Verificado" = coberto por teste
+Situação em 23/10/2026 (fim da etapa 8). "Verificado" = coberto por teste
 automatizado executado nesta etapa.
 
 Legenda: ✅ verificado · 🟡 parcial · ⬜ não iniciado
@@ -98,3 +98,14 @@ Legenda: ✅ verificado · 🟡 parcial · ⬜ não iniciado
 - ✅ Exportação CSV de oportunidades e empresas, só com sessão, protegida contra fórmulas — E2E + unitário
 - ✅ Importação dos dados abertos do CNPJ: só ativos do município, com nome fantasia, sem telefone/e-mail; CNPJ existente ignorado; nome igual vai para revisão — unitário + execução manual com arquivos fictícios
 - ✅ Nenhuma área "Em desenvolvimento" restante na navegação — E2E
+
+## Acessibilidade, segurança e implantação (etapa 8)
+- ✅ Todas as telas sem violações WCAG 2.1 A/AA no axe, em desktop e celular — E2E
+- ✅ Login e atalho "Pular para o conteúdo" só pelo teclado — E2E
+- ✅ CSP com nonce por requisição, sem bloqueios nas telas; demais cabeçalhos de segurança — E2E + unitário
+- ✅ Redirecionamento após o login sem saída para outros sites — unitário
+- ✅ Invariantes de segurança do banco (RLS, `anon`, `search_path`, sem DELETE) — integração
+- ✅ Dependências de produção sem vulnerabilidades conhecidas (`npm audit`)
+- 🟡 CI no GitHub — criada; a parte com banco não pôde ser executada aqui (sem Docker): conferir na primeira execução
+- ⬜ Publicação em produção — guia pronto (`docs/IMPLANTACAO.md`); depende das contas Supabase/Vercel da CRIEXO
+- ⬜ Revisão manual com leitor de tela (NVDA/VoiceOver) — recomendada antes do uso diário

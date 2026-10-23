@@ -82,7 +82,7 @@ Revisão do modelo sugerido na especificação:
 | 5 | Nova prospecção (fluxo guiado) + Produtos e ideias com aprovação individual e detecção de duplicidade; IA (Gemini) trocável com limite diário; busca na base interna; pesquisas anteriores e nova execução | **Concluída** |
 | 6 | OpenStreetMap na busca, BrasilAPI e geocodificação sob demanda, pontuação automática nas pesquisas (proximidade + avaliação da IA) | **Concluída** (testada com servidor simulado; rede real pendente, A-03) |
 | 7 | Revisão humana das possíveis duplicidades, importação dos dados abertos do CNPJ, confirmação de localização e recálculo, relatórios, exportação CSV | **Concluída** |
-| 8 | Revisão de acessibilidade, segurança, desempenho; implantação | Próxima |
+| 8 | Revisão de acessibilidade, segurança, desempenho; CI; guia de implantação | **Concluída** (publicação depende das contas da CRIEXO — `docs/IMPLANTACAO.md`) |
 
 ## 5. Riscos técnicos e dependências externas
 

@@ -33,8 +33,8 @@
   /* Texto */
   --foreground: var(--palette-off-white);
   --muted-foreground: var(--palette-muted-gray);
-  /* Somente para metadados não essenciais (contraste ≥ 4.5:1 sobre --surface). */
-  --subtle-foreground: color-mix(in oklab, var(--palette-muted-gray) 82%, var(--palette-near-black));
+  /* Somente para metadados não essenciais. 92%: contraste ≥ 4,5:1 (WCAG AA) até sobre a superfície mais clara (surface-hover). */
+  --subtle-foreground: color-mix(in oklab, var(--palette-muted-gray) 92%, var(--palette-near-black));
 
   /* Bordas e foco */
   --border: var(--palette-slate);

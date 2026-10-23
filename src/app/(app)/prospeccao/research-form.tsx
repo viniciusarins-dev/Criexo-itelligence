@@ -10,7 +10,7 @@ import { useActionFeedback } from "@/components/forms/use-action-feedback";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { RESEARCH_TYPES } from "@/domain/research/research";
+import { RESEARCH_TYPES } from "@/domain/research/types";
 import { IDLE, pick, type ActionState } from "@/lib/validation/form-data";
 import { cn } from "@/lib/utils";
 

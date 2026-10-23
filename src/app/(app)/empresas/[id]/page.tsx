@@ -219,7 +219,7 @@ export default async function CompanyPage({ params, searchParams }: PageProps<"/
           {provenanceRows.length === 0 ? (
             <p className="text-sm text-muted-foreground">Nenhuma informação com origem registrada.</p>
           ) : (
-            <div className="overflow-x-auto">
+            <div tabIndex={0} className="overflow-x-auto rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border text-left text-xs text-muted-foreground">

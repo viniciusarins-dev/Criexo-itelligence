@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/select";
-import { BRAZIL_STATES, DUPLICATE_REASON_LABELS } from "@/domain/companies/company";
+import { BRAZIL_STATES, DUPLICATE_REASON_LABELS } from "@/domain/companies/options";
 import { pick, pickChecked } from "@/lib/validation/form-data";
 
 import { SubmitButton } from "./submit-button";
@@ -68,6 +68,7 @@ export function CompanyForm({ defaults, cancelHref }: { defaults: CompanyFormDef
                 <Link
                   href={`/empresas/${candidate.id}`}
                   target="_blank"
+                  rel="noopener"
                   className="inline-flex items-center gap-1 font-medium text-foreground underline underline-offset-4"
                 >
                   {candidate.name}

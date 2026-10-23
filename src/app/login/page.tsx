@@ -20,9 +20,9 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
         />
         <BrandLogo className="relative" />
         <div className="relative max-w-md space-y-4">
-          <h1 className="text-3xl font-semibold leading-tight tracking-tight">
+          <p className="text-3xl font-semibold leading-tight tracking-tight">
             Encontre, avalie e acompanhe quem pode comprar suas soluções em impressão 3D.
-          </h1>
+          </p>
           <p className="text-sm leading-relaxed text-muted-foreground">
             Sistema interno de prospecção comercial da CRIEXO Soluções Criativas. Cada pontuação mostra os
             critérios, as evidências e o que ainda precisa ser confirmado.
@@ -35,7 +35,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
         <div className="w-full max-w-sm space-y-8">
           <BrandLogo className="lg:hidden" />
           <div className="space-y-1.5">
-            <h2 className="text-xl font-semibold tracking-tight">Entrar</h2>
+            <h1 className="text-xl font-semibold tracking-tight">Entrar</h1>
             <p className="text-sm text-muted-foreground">Use as credenciais fornecidas pelo administrador.</p>
           </div>
           <LoginForm next={nextPath} />

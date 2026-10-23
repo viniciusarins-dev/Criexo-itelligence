@@ -1,7 +1,7 @@
 "use client";
 
 import { Menu, X } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import { Dialog } from "radix-ui";
 import { useState } from "react";
 
@@ -24,7 +24,7 @@ export function MobileNav() {
         {open ? (
           <Dialog.Portal forceMount>
             <Dialog.Overlay asChild forceMount>
-              <motion.div
+              <m.div
                 className="fixed inset-0 z-40 bg-overlay"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -33,7 +33,7 @@ export function MobileNav() {
               />
             </Dialog.Overlay>
             <Dialog.Content asChild forceMount aria-describedby={undefined}>
-              <motion.div
+              <m.div
                 className="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col border-r border-border bg-surface p-4 outline-none"
                 initial={{ x: "-100%" }}
                 animate={{ x: 0 }}
@@ -54,7 +54,7 @@ export function MobileNav() {
                   </Dialog.Close>
                 </div>
                 <SidebarNav onNavigate={() => setOpen(false)} />
-              </motion.div>
+              </m.div>
             </Dialog.Content>
           </Dialog.Portal>
         ) : null}

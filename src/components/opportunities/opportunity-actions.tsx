@@ -13,7 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { NativeSelect } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { contactedStatus, discardStatus, type CommercialStatus } from "@/domain/opportunities/opportunity";
+import { contactedStatus, discardStatus, type CommercialStatus } from "@/domain/opportunities/statuses";
 import { IDLE, pick, type ActionState } from "@/lib/validation/form-data";
 import { cn } from "@/lib/utils";
 

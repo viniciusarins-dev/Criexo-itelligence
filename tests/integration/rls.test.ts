@@ -713,4 +713,38 @@ describe.skipIf(!databaseUrl)("RLS e funções de histórico", () => {
       });
     });
   });
+
+  describe("invariantes de segurança do banco (etapa 8)", () => {
+    const one = async (sql: string) => (await client.query(sql)).rows.map((row) => Object.values(row)[0]);
+
+    it("toda tabela pública tem RLS e o anon não tem privilégio algum", async () => {
+      await asSuperuser();
+      expect(await one("select c.relname from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relkind = 'r' and not c.relrowsecurity")).toEqual([]);
+      expect(await one("select table_name from information_schema.role_table_grants where grantee = 'anon' and table_schema = 'public'")).toEqual([]);
+      expect(
+        await one("select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and has_function_privilege('anon', p.oid, 'execute')"),
+      ).toEqual([]);
+    });
+
+    it("funções privilegiadas têm search_path fixo e views respeitam o RLS de quem consulta", async () => {
+      await asSuperuser();
+      expect(
+        await one(`select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                   where n.nspname in ('public', 'private') and p.prosecdef
+                     and not exists (select 1 from unnest(coalesce(p.proconfig, '{}')) c where c like 'search_path=%')`),
+      ).toEqual([]);
+      expect(
+        await one(`select c.relname from pg_class c join pg_namespace n on n.oid = c.relnamespace
+                   where n.nspname = 'public' and c.relkind = 'v'
+                     and not coalesce((select bool_or(o in ('security_invoker=true', 'security_invoker=on')) from unnest(c.reloptions) o), false)`),
+      ).toEqual([]);
+    });
+
+    it("nenhum papel da API apaga dados (RN-10)", async () => {
+      await asSuperuser();
+      expect(
+        await one("select table_name from information_schema.role_table_grants where grantee in ('anon', 'authenticated') and table_schema = 'public' and privilege_type in ('DELETE', 'TRUNCATE')"),
+      ).toEqual([]);
+    });
+  });
 });

@@ -65,7 +65,7 @@ export default async function PipelinePage({ searchParams }: PageProps<"/pipelin
             "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 transition-colors",
             onlySaved ? "border-primary/40 bg-primary-subtle text-foreground" : "border-border text-muted-foreground hover:text-foreground",
           )}
-          aria-pressed={onlySaved}
+          aria-current={onlySaved ? "true" : undefined}
         >
           <BookmarkCheck aria-hidden="true" className="size-4" />
           Somente salvas

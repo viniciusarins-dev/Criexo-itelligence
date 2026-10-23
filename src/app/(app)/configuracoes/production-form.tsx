@@ -20,8 +20,8 @@ import {
   PRINTER_SCHEDULES,
   SIZE_UNIT_LABELS,
   SIZE_UNITS,
-  type ProductionSettings,
-} from "@/domain/settings/production";
+} from "@/domain/settings/production-options";
+import type { ProductionSettings } from "@/domain/settings/production";
 import { IDLE, pick, pickChecked, type ActionState } from "@/lib/validation/form-data";
 
 import { saveProduction } from "./actions";

@@ -2,8 +2,9 @@ import { z } from "zod";
 
 import { normalizeIdeaName } from "@/domain/ideas/idea";
 
-export const RESEARCH_TYPES = ["segment", "product"] as const;
-export type ResearchType = (typeof RESEARCH_TYPES)[number];
+import { RESEARCH_TYPES } from "./types";
+
+export { RESEARCH_TYPES, type ResearchType } from "./types";
 
 export const researchInputSchema = z.object({
   researchType: z.enum(RESEARCH_TYPES, { error: "Escolha o tipo de pesquisa." }),

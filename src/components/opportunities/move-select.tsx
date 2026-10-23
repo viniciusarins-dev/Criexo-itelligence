@@ -4,7 +4,7 @@ import { useTransition } from "react";
 import { toast } from "sonner";
 
 import { moveOpportunity } from "@/app/(app)/oportunidades/actions";
-import type { CommercialStatus } from "@/domain/opportunities/opportunity";
+import type { CommercialStatus } from "@/domain/opportunities/statuses";
 
 /** Troca rápida de status nos cartões do pipeline (acessível por teclado, sem arrastar). */
 export function MoveSelect({

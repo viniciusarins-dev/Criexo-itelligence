@@ -8,10 +8,10 @@ import {
 import { parseCoordinatePair } from "@/domain/settings/geo";
 import type { InformationStatus } from "@/domain/types/information";
 
-export const BRAZIL_STATES = [
-  "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA",
-  "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO",
-] as const;
+import { BRAZIL_STATES, DUPLICATE_REASON_LABELS, type DuplicateReason } from "./options";
+
+export { BRAZIL_STATES, DUPLICATE_REASON_LABELS, type DuplicateReason } from "./options";
+
 
 /** Valores do formulário, como digitados. */
 export type CompanyFormInput = {
@@ -192,14 +192,6 @@ export function manualProvenance(
 // Duplicidade (seção 7: sinalizar, nunca unir automaticamente)
 // -----------------------------------------------------------------------------
 
-export type DuplicateReason = "cnpj" | "website" | "phone" | "name";
-
-export const DUPLICATE_REASON_LABELS: Record<DuplicateReason, string> = {
-  cnpj: "mesmo CNPJ",
-  website: "mesmo site",
-  phone: "mesmo telefone",
-  name: "mesmo nome",
-};
 
 export type ExistingCompanyKeys = {
   id: string;
