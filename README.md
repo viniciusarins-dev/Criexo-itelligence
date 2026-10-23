@@ -212,7 +212,8 @@ provedores.
 ## Implantação
 
 Passo a passo completo (Supabase + Vercel, plano gratuito) em
-`docs/IMPLANTACAO.md`. Resumo: aplique as migrations com `supabase db push`,
+`docs/IMPLANTACAO.md`. Para fazer com o Claude Cowork pelo navegador, use o
+prompt pronto em `docs/PROMPT_COWORK_IMPLANTACAO.md`. Resumo: aplique as migrations com `supabase db push`,
 desligue o cadastro público no Supabase, configure
 `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` na Vercel
 e inclua a URL de produção em **Authentication → URL Configuration**.
