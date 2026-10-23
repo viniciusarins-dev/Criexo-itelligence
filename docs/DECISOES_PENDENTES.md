@@ -17,6 +17,6 @@ As decisões já tomadas (DP-01 a DP-26, exceto DP-18) estão em
 
 | # | Ação | Responsável |
 |---|------|-------------|
-| A-01 | Criar conta na plataforma de API da OpenAI (platform.openai.com), sem cadastrar cartão, e verificar se a API funciona sem saldo | Vinicius |
-| A-02 | Se A-01 não funcionar sem pagar: criar chave gratuita no Google AI Studio para o Gemini | Vinicius |
+| A-01 | ~~Verificar se a API da OpenAI funciona sem saldo~~ — **concluída em 23/10/2026: exige créditos.** A chave criada foi exposta no chat e deve ser revogada | Vinicius |
+| A-02 | Criar chave gratuita no Google AI Studio para o Gemini e cadastrá-la como segredo do ambiente (nunca no chat ou no código) | Vinicius |
 | A-03 | Permitir no ambiente de desenvolvimento o acesso a `overpass-api.de`, `brasilapi.com.br` e ao provedor de IA escolhido, para testar as integrações de verdade | Vinicius |

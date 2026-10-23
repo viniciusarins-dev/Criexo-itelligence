@@ -1,4 +1,5 @@
 import { Target } from "lucide-react";
+import Link from "next/link";
 
 import { EmptyState } from "@/components/states/empty-state";
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +37,9 @@ export function PriorityOpportunities({
         {items.map((item) => (
           <TableRow key={item.id}>
             <TableCell>
-              <p className="font-medium text-foreground">{item.companyName}</p>
+              <Link href={`/oportunidades/${item.id}`} className="font-medium text-foreground hover:underline">
+                {item.companyName}
+              </Link>
               {item.segment ? <p className="text-xs text-subtle-foreground">{item.segment}</p> : null}
             </TableCell>
             <TableCell>

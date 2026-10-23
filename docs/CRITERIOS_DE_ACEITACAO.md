@@ -1,6 +1,6 @@
 # Critérios de aceitação — MVP
 
-Situação em 23/10/2026 (fim da etapa 3). "Verificado" = coberto por teste
+Situação em 23/10/2026 (fim da etapa 4). "Verificado" = coberto por teste
 automatizado executado nesta etapa.
 
 Legenda: ✅ verificado · 🟡 parcial · ⬜ não iniciado
@@ -36,9 +36,9 @@ Legenda: ✅ verificado · 🟡 parcial · ⬜ não iniciado
 - ✅ Dados insuficientes sinalizados — teste unitário; dashboard mostra "dados incompletos"
 
 ## Gestão comercial
-- 🟡 Salvar empresa/oportunidade — `set_opportunity_saved()` testada; interface pendente
-- 🟡 Registrar observações — BD testado; interface pendente
-- 🟡 Atualizar status — `change_opportunity_status()` testada; interface pendente
+- ✅ Salvar oportunidade — E2E + integração
+- ✅ Registrar observações e contatos — E2E
+- ✅ Atualizar status, descartar (com confirmação) e reabrir — E2E + integração
 - ✅ Histórico permanece disponível (sem UPDATE/DELETE) — integração
 - ✅ Alterações persistidas no banco — integração
 
@@ -68,3 +68,8 @@ Legenda: ✅ verificado · 🟡 parcial · ⬜ não iniciado
 - ✅ Detalhes com origem de cada informação, distância e mapa — E2E
 - ✅ Duplicidade sinalizada, sem união automática — E2E + unitário
 - ✅ Funciona no celular sem rolagem horizontal — E2E
+
+## Oportunidades e pipeline (etapa 4)
+- ✅ Pipeline em colunas e em tabela; mudanças atualizam o banco e o histórico — E2E
+- ✅ Oportunidade salva ≠ contatada ≠ convertida — E2E
+- ✅ Sem rolagem horizontal da página no pipeline, lista e detalhes — E2E

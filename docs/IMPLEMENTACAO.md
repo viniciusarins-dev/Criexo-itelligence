@@ -186,3 +186,38 @@
   identificadores alterados geram aviso.
 - **Filtros cortados em 1440 px** e esqueleto de carregamento da lista usado
   na página de detalhes: corrigidos após conferência visual.
+
+## Etapa 4 — Oportunidades e pipeline comercial (23/10/2026)
+
+### Implementado
+- **Criar oportunidade** na página da empresa, com produto aprovado opcional
+  (RN-03: só ideias aprovadas). Uma oportunidade por empresa e produto; tentar
+  criar de novo leva à existente.
+- **Página da oportunidade** (`/oportunidades/[id]`): salvar/remover dos
+  salvos; mudar status com observação; registrar observação ou contato (mover
+  para "Contatada" só se o usuário marcar); descartar com janela de
+  confirmação e motivo; reabrir escolhendo outro status; pontuação com
+  critérios, pesos, natureza das evidências e faixa quando incompleta;
+  histórico completo.
+- **Lista de oportunidades** com busca por empresa, filtro por status e
+  "somente salvas", ordenação e paginação; cartões no celular.
+- **Pipeline** (`/pipeline`) em colunas por status (configuráveis no banco) e
+  em tabela; troca de status por seleção acessível em cada cartão; filtro de
+  salvas; limite de 300 cartões com aviso.
+- Todas as mudanças passam pelas funções do banco que gravam o histórico
+  (`change_opportunity_status`, `set_opportunity_saved`).
+- OpenAI exige créditos (A-01): a IA começará pelo plano gratuito do Gemini.
+
+### Testes executados (resultados reais)
+- `npm run typecheck`, `npm run lint` — sem erros.
+- Vitest — 92 testes passando (74 unitários + 18 de integração).
+- Playwright — 32 testes passando, em duas execuções seguidas.
+- `npm run build` — sucesso.
+
+### Problemas encontrados e corrigidos
+- **Pipeline alargava a página** (1830 px numa tela de 1440): rótulos para
+  leitores de tela dentro das colunas fora da área visível tinham posição
+  absoluta calculada pela página. O quadro passou a ser o contexto de
+  posição; o teste E2E agora mede a largura também na visão em colunas.
+- **Janela de descarte continuava aberta** após concluir: fecha dentro da
+  própria ação.

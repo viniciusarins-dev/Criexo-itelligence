@@ -452,4 +452,38 @@ describe.skipIf(!databaseUrl)("RLS e funções de histórico", () => {
       expect(await insert("12ABC34501DE35")).toBe("23505");
     });
   });
+
+  it("uma oportunidade por empresa e produto (inclusive sem produto) e reabertura registrada", async () => {
+    await inTransaction(async (users) => {
+      await as(users.member);
+      const company = await client.query(
+        "insert into public.companies (name, normalized_name) values ('Empresa Única', 'empresa unica') returning id",
+      );
+      const companyId = company.rows[0].id as string;
+      const first = await client.query("insert into public.opportunities (company_id) values ($1) returning id", [companyId]);
+      expect(await errorCode("insert into public.opportunities (company_id) values ($1)", [companyId])).toBe("23505");
+
+      const opportunityId = first.rows[0].id as string;
+      await client.query("select public.change_opportunity_status($1, 'descartada', 'Sem interesse')", [opportunityId]);
+      await client.query("select public.change_opportunity_status($1, 'para_analisar', 'Voltou a ter interesse')", [opportunityId]);
+      const history = await client.query(
+        "select previous_status, new_status from public.commercial_activities where opportunity_id = $1 order by created_at, id",
+        [opportunityId],
+      );
+      expect(history.rows).toEqual(
+        expect.arrayContaining([
+          { previous_status: "nova", new_status: "descartada" },
+          { previous_status: "descartada", new_status: "para_analisar" },
+        ]),
+      );
+      // Salvar duas vezes não duplica o histórico.
+      await client.query("select public.set_opportunity_saved($1, true)", [opportunityId]);
+      await client.query("select public.set_opportunity_saved($1, true)", [opportunityId]);
+      const saved = await client.query(
+        "select count(*)::int as n from public.commercial_activities where opportunity_id = $1 and activity_type = 'saved'",
+        [opportunityId],
+      );
+      expect(saved.rows[0].n).toBe(1);
+    });
+  });
 });

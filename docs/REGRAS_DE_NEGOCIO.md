@@ -48,7 +48,7 @@ Legenda de garantia: **BD** = banco (constraint, função, RLS) · **Domínio** 
 | DP-13 | Christian e Vinicius são **administradores** | Papel `admin` para os dois ao liberar os usuários |
 | DP-14 | Christian e Vinicius aprovam ideias | `decide_product_idea` já aceita qualquer membro ativo |
 | DP-15 | **Sem gastos por enquanto.** Busca de empresas: **OpenStreetMap** (via Overpass) como fonte principal; **dados abertos do CNPJ (Receita Federal)** como complemento; **BrasilAPI** para completar dados de um CNPJ conhecido; cadastro manual sempre disponível. Google Places fica de fora (exige conta com cartão). Escolha delegada ao Vinicius em 22/10/2026 | Adaptadores na etapa 6; detalhes em `DIAGNOSTICO_E_PLANO.md` §6 |
-| DP-16 | **Sem gastos por enquanto, preferência pela OpenAI (ChatGPT).** A API da OpenAI é cobrada à parte da assinatura do ChatGPT; se uma conta sem cartão não conseguir usar a API, o sistema usa o plano gratuito do Gemini até haver orçamento. O provedor fica trocável por configuração. Escolha delegada ao Vinicius em 22/10/2026 | Camada de IA na etapa 6 |
+| DP-16 | **Sem gastos por enquanto, preferência pela OpenAI (ChatGPT).** A API da OpenAI é cobrada à parte da assinatura do ChatGPT; como a API exige créditos (verificado em 23/10/2026), o sistema começa com o plano gratuito do Gemini e passa para a OpenAI quando houver orçamento. O provedor fica trocável por configuração. Escolha delegada ao Vinicius em 22/10/2026 | Camada de IA na etapa 6 |
 | DP-17 | O sistema **não envia** mensagens; contatos são feitos e registrados manualmente | Nenhuma integração de envio |
 | DP-19 | Apenas tema escuro | Sem preferência de tema |
 | DP-20 | Etapas do funil aprovadas | `commercial_statuses` |

@@ -66,8 +66,9 @@ test.describe("com usuários configurados", () => {
     const nav = page.getByRole("navigation", { name: "Navegação principal" }).last();
     await expect(nav.getByRole("link", { name: "Dashboard" })).toHaveAttribute("aria-current", "page");
     await expect(nav.getByRole("link", { name: "Empresas" })).toBeVisible();
-    await expect(nav.getByRole("link", { name: /Pipeline/ })).toHaveCount(0);
-    await expect(nav.locator("[aria-disabled=true]", { hasText: "Pipeline comercial" })).toHaveCount(1);
+    await expect(nav.getByRole("link", { name: "Pipeline comercial" })).toBeVisible();
+    await expect(nav.getByRole("link", { name: /Relatórios/ })).toHaveCount(0);
+    await expect(nav.locator("[aria-disabled=true]", { hasText: "Relatórios" })).toHaveCount(1);
     await page.screenshot({ path: testInfo.outputPath("dashboard-menu.png"), fullPage: true });
     if (await menuButton.isVisible()) await page.keyboard.press("Escape");
 

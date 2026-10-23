@@ -4,9 +4,9 @@ Sistema interno de prospecção comercial da **CRIEXO Soluções Criativas** par
 encontrar, avaliar e acompanhar empresas que possam comprar produtos e
 soluções em impressão 3D.
 
-> **Situação:** etapas 1 a 3 de 8 concluídas — base, design system,
-> autenticação, banco com RLS, motor de pontuação, dashboard, configurações e
-> empresas (cadastro manual). O fluxo de prospecção, as
+> **Situação:** etapas 1 a 4 de 8 concluídas — base, design system,
+> autenticação, banco com RLS, motor de pontuação, dashboard, configurações,
+> empresas (cadastro manual), oportunidades e pipeline comercial. O fluxo de prospecção, as
 > integrações e as demais telas ainda **não** estão implementados. Ver
 > [`docs/IMPLEMENTACAO.md`](docs/IMPLEMENTACAO.md) e
 > [`docs/CRITERIOS_DE_ACEITACAO.md`](docs/CRITERIOS_DE_ACEITACAO.md).

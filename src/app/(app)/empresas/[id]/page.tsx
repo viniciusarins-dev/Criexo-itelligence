@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { InformationBadge } from "@/components/companies/information-badge";
+import { CreateOpportunityForm } from "@/components/opportunities/create-opportunity-form";
 import { EmptyState } from "@/components/states/empty-state";
 import { Notice } from "@/components/states/notice";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +17,7 @@ import { formatDateTime } from "@/lib/formatting/date";
 import { formatDistanceKm, formatPhoneBr, formatPostalCode } from "@/lib/formatting/numbers";
 import { ACTIVITY_LABELS } from "@/lib/presentation/labels";
 import { getCompany } from "@/server/repositories/companies";
+import { approvedIdeas } from "@/server/repositories/opportunities";
 
 export const metadata: Metadata = { title: "Empresa" };
 
@@ -51,6 +53,7 @@ export default async function CompanyPage({ params, searchParams }: PageProps<"/
   const { salvo } = await searchParams;
   const details = await getCompany(id);
   if (!details) notFound();
+  const ideas = await approvedIdeas();
   const { company, provenance } = details;
 
   const place = [company.neighborhood, company.city, company.state].filter(Boolean).join(", ");
@@ -238,20 +241,28 @@ export default async function CompanyPage({ params, searchParams }: PageProps<"/
               <CardDescription>Produtos que esta empresa poderia comprar.</CardDescription>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            <CreateOpportunityForm companyId={company.id} ideas={ideas} />
+            {ideas.length === 0 ? (
+              <p className="text-xs text-subtle-foreground">
+                Ainda não há produtos aprovados. A oportunidade pode ser criada sem produto e associada depois.
+              </p>
+            ) : null}
             {details.opportunities.length === 0 ? (
               <EmptyState
                 icon={Target}
                 title="Nenhuma oportunidade"
-                description="As oportunidades surgem das pesquisas de prospecção. Salvar e acompanhar oportunidades chega com a área de Oportunidades."
-                className="py-6"
+                description="Crie uma oportunidade para acompanhar contatos e status desta empresa."
+                className="py-4"
               />
             ) : (
               <ul className="divide-y divide-border">
                 {details.opportunities.map((opportunity) => (
                   <li key={opportunity.id} className="flex items-start justify-between gap-3 py-3">
                     <div className="min-w-0 space-y-1">
-                      <p className="text-sm font-medium">{opportunity.productName ?? "Sem produto definido"}</p>
+                      <Link href={`/oportunidades/${opportunity.id}`} className="text-sm font-medium hover:underline">
+                        {opportunity.productName ?? "Sem produto definido"}
+                      </Link>
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge>{opportunity.statusLabel}</Badge>
                         {opportunity.isSaved ? (
