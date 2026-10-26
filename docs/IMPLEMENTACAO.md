@@ -623,3 +623,25 @@ confirmado", então não dava para saber a causa.
 - Script de recomeço executado no banco local dentro de uma transação
   desfeita: passou os usuários para a lista, apagou-os e liberou os
   e-mails.
+
+## Ajuste — Primeiro acesso sem perder dados (26/10/2026)
+
+O bloco que apaga os usuários falhou em produção com o erro 23503
+(`system_settings_updated_by_fkey`), porque os usuários antigos já tinham
+registros: configurações, pesquisas, ideias e empresas.
+
+- **Novo script** `docs/sql/primeiro-acesso-transferir.sql`, em três passos:
+  1. renomeia o usuário antigo para `antigo.<e-mail>`;
+  2. a pessoa faz o primeiro acesso;
+  3. os registros das 15 colunas que apontam para `profiles` passam para a
+     conta nova, e só então o usuário antigo é apagado.
+- **Guia de implantação:** a seção "Recomeçar os acessos" aponta para esse
+  script quando o erro aparece.
+
+### Testes executados (resultados reais)
+No banco local:
+- o mesmo erro 23503 se repetiu ao apagar um usuário dono de uma empresa;
+- passo 1, cadastro pela API de signup (200), passo 3;
+- a empresa passou para a conta nova;
+- o usuário antigo foi apagado;
+- o login com a senha nova voltou 200.

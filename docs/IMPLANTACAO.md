@@ -106,3 +106,9 @@ Se os usuários foram criados antes do primeiro acesso existir e não conseguem
 entrar, rode no SQL Editor, bloco por bloco, `docs/sql/primeiro-acesso-recomecar.sql`.
 Ele copia os e-mails atuais para a lista de liberados (como administradores) e
 apaga os usuários. Depois, cada pessoa cria a senha em **/primeiro-acesso**.
+
+Se o bloco que apaga os usuários falhar com `violates foreign key constraint`
+(erro 23503), esses usuários já criaram registros. Não apague nada: use
+`docs/sql/primeiro-acesso-transferir.sql`. Ele renomeia o usuário antigo,
+a pessoa faz o primeiro acesso com o e-mail de sempre, e os registros passam
+para a conta nova antes de o usuário antigo ser apagado.
