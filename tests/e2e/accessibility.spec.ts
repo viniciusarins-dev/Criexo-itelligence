@@ -31,9 +31,10 @@ function watchCsp(page: Page) {
   return violations;
 }
 
-test("login sem sessão é acessível", async ({ page }) => {
+test("login e primeiro acesso sem sessão são acessíveis", async ({ page }) => {
   const csp = watchCsp(page);
   await audit(page, "/login");
+  await audit(page, "/primeiro-acesso");
   expect(csp).toEqual([]);
 });
 

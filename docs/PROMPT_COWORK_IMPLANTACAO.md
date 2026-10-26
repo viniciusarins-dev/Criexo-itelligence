@@ -46,6 +46,7 @@ Em https://platform.openai.com/api-keys, me ajude a encontrar e **revogar** a ch
    6. `20261023000600_sources_and_scoring.sql`
    7. `20261023000700_duplicate_reviews.sql`
    8. `20261023000800_security_hardening.sql`
+   9. `20261026000900_first_access.sql`
 
    Cole o conteúdo inteiro de cada arquivo, rode e confira "Success" antes do próximo. **Se uma der erro, pare e me mostre a mensagem**; não tente corrigir o SQL.
 3. Conferência: rode no SQL Editor e me mostre o resultado (deve voltar **nenhuma linha**):
@@ -55,15 +56,15 @@ Em https://platform.openai.com/api-keys, me ajude a encontrar e **revogar** a ch
    ```
 
 ### 4. Configurar o login no Supabase
-1. **Authentication → Sign In / Providers:** desligue "Allow new users to sign up". Em Email, deixe a confirmação de e-mail ligada.
+1. **Authentication → Sign In / Providers:** deixe **ligado** "Allow new users to sign up" (só e-mails da lista de liberados conseguem criar conta; a trava é no banco). Em Email, **desligue** "Confirm email".
 2. **Senhas:** mínimo de 10 caracteres, exigindo letras e números.
-3. **Authentication → Users → Add user:** crie os usuários do Christian e do Vinicius. **Pergunte os e-mails** e deixe que eu digite as senhas.
-4. No SQL Editor, libere os dois como administradores (troque pelos e-mails que eu informar):
+3. **Libere os e-mails** do Christian e do Vinicius no SQL Editor (**pergunte os e-mails**):
    ```sql
-   update public.profiles set is_active = true, role = 'admin'
-   where id in (select id from auth.users where email in ('EMAIL_1', 'EMAIL_2'));
+   insert into public.authorized_emails (email, role, display_name)
+   values ('EMAIL_1', 'admin', 'Christian'), ('EMAIL_2', 'admin', 'Vinicius');
    ```
-   Confirme que a consulta atualizou 2 linhas.
+   Se já existirem usuários criados antes, rode em vez disso o script `docs/sql/primeiro-acesso-recomecar.sql` do repositório, um bloco de cada vez, e me mostre as conferências.
+4. Não crie usuários pelo painel: cada um vai criar a própria senha em `/primeiro-acesso` (etapa 7).
 
 ### 5. Publicar na Vercel
 1. Em https://vercel.com/new, importe o repositório `Criexo-itelligence` (framework Next.js, branch `main`).
@@ -87,7 +88,8 @@ Lembrete: no plano gratuito, o Google usa o que é enviado para melhorar os prod
 
 ### 7. Conferência final
 Abra o endereço publicado e confira comigo:
-- [ ] A tela de login aparece e eu consigo entrar com meu usuário.
+- [ ] Em `/primeiro-acesso`, eu crio minha senha com o meu e-mail e entro direto (o Christian faz o mesmo com o dele, logo em seguida).
+- [ ] Depois de sair, consigo entrar de novo pela tela de login com a senha criada.
 - [ ] Em **Configurações**, preencher (ou conferir) a região: Rua Landman, 147, Joinville–SC · coordenadas `-26.28300, -48.877018` · raio de 10 km.
 - [ ] Preencher a capacidade produtiva: Bambu A1 Mini, 18 × 18 × 18 cm, PLA, 30 h de trabalho por semana, prazo padrão de 3 dias, modela só peças simples, impressora ligada só no horário de trabalho com 9,5 h por dia, peça pequena até 8 cm em cada lado, tempo contado por peça, 32 / 16 / 12 peças por dia (menos de 1 h / de 1 a 5 h / 5 h ou mais), várias peças por mesa.
 - [ ] Fazer uma pesquisa de teste (ex.: "Oficinas mecânicas") com uma ideia manual aprovada e clicar em "Buscar empresas". Me dizer se a fonte "OpenStreetMap" aparece como "Concluída" ou com erro (e qual).

@@ -44,3 +44,6 @@ next-env.d.ts
 # playwright
 /test-results/
 /playwright-report/
+
+# Saída do graphify (grafo de conhecimento gerado localmente)
+graphify-out/

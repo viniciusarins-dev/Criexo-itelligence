@@ -53,6 +53,7 @@ Legenda de garantia: **BD** = banco (constraint, função, RLS) · **Domínio** 
 | DP-19 | Apenas tema escuro | Sem preferência de tema |
 | DP-20 | Etapas do funil aprovadas | `commercial_statuses` |
 | DP-21 | Plano gratuito do Supabase no início | README → Limitações |
+| DP-28 | **Primeiro acesso por e-mail liberado** (Vinicius, 26/10/2026): os usuários não são criados pelo painel; o administrador libera o e-mail e a pessoa cria a própria senha na hora, já liberada com o papel definido. Risco aceito: até o dono fazer o primeiro acesso, quem souber um e-mail liberado poderia criar a senha antes; por isso cada e-mail vale uma única vez e o primeiro acesso deve ser feito logo após liberar | BD: `authorized_emails` + gatilhos em `auth.users`; tela `/primeiro-acesso` |
 
 ## Estratégia de pontuação implementada (aprovada — DP-04 a DP-12)
 

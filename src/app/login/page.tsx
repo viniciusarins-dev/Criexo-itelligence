@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { BrandLogo } from "@/components/layout/brand";
 import { safeRedirectPath } from "@/lib/validation/auth";
@@ -39,8 +40,14 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
             <p className="text-sm text-muted-foreground">Use as credenciais fornecidas pelo administrador.</p>
           </div>
           <LoginForm next={nextPath} />
+          <p className="text-sm text-muted-foreground">
+            Primeiro acesso?{" "}
+            <Link href="/primeiro-acesso" className="font-medium text-primary-text underline-offset-4 hover:underline">
+              Crie sua senha
+            </Link>
+          </p>
           <p className="text-xs leading-relaxed text-subtle-foreground">
-            Não há cadastro público. Novos usuários são criados e liberados por um administrador.
+            Não há cadastro público: só e-mails liberados pelo administrador podem criar senha.
           </p>
         </div>
       </section>

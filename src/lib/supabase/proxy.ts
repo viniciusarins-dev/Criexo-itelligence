@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { readPublicEnv } from "@/lib/env";
 import { buildContentSecurityPolicy, createNonce } from "@/lib/security/csp";
 
-const PUBLIC_PATHS = ["/login", "/configuracao-pendente"];
+const PUBLIC_PATHS = ["/login", "/primeiro-acesso", "/configuracao-pendente"];
 
 function isPublicPath(pathname: string) {
   return PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
@@ -78,7 +78,7 @@ export async function updateSession(request: NextRequest) {
     return redirectWithCookies(url, response);
   }
 
-  if (hasSession && pathname === "/login") {
+  if (hasSession && (pathname === "/login" || pathname === "/primeiro-acesso")) {
     return redirectWithCookies(new URL("/dashboard", request.url), response);
   }
 

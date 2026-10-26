@@ -60,16 +60,25 @@ npx supabase@2.121.0 status       # mostra URL e chave publicável/anon
 
 ### Usuários autorizados
 
-Não há cadastro público. Para liberar alguém:
+Não há cadastro público. Só e-mails da **lista de liberados**
+(`authorized_emails`) conseguem criar conta, e cada e-mail uma única vez. A
+trava fica no próprio banco.
 
-1. Crie o usuário em **Authentication → Users → Add user** (e-mail e senha).
-   Um perfil **inativo** é criado automaticamente.
-2. Libere o **primeiro administrador** pelo SQL Editor:
+1. Libere o e-mail pelo SQL Editor:
    ```sql
-   update public.profiles set is_active = true, role = 'admin'
-   where id = (select id from auth.users where email = 'email@exemplo.com');
+   insert into public.authorized_emails (email, role, display_name)
+   values ('email@exemplo.com', 'admin', 'Nome');   -- role: 'admin' ou 'member'
    ```
-3. Os demais usuários são liberados em **Configurações → Equipe**.
+2. A pessoa abre **/primeiro-acesso**, digita o e-mail, cria a senha e já
+   entra, liberada com o papel definido na lista.
+3. Para recomeçar (por exemplo, se alguém esqueceu a senha antes de entrar),
+   apague o usuário em **Authentication → Users**: o e-mail volta a ficar
+   disponível para um novo primeiro acesso.
+
+No Supabase, deixe **Allow new users to sign up** ligado (a lista é a trava) e
+**Confirm email** desligado, para a senha valer na hora. O script de uso único
+`docs/sql/primeiro-acesso-recomecar.sql` move os usuários atuais para a lista e
+os apaga.
 
 Christian e Vinicius são administradores (DP-13).
 

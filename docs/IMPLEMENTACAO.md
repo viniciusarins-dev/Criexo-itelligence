@@ -580,3 +580,68 @@
 - Conferir o job de banco da CI na primeira execução no GitHub.
 - Revisão manual com leitor de tela antes do uso diário.
 - DP-27, DP-18, A-02 e A-03 continuam abertas.
+
+## Ajuste — Primeiro acesso (26/10/2026)
+
+### Motivo
+Os dois usuários criados no Supabase não conseguiam entrar. O app mostrava
+"E-mail ou senha incorretos." para qualquer erro, inclusive "e-mail não
+confirmado", então não dava para saber a causa.
+
+### Implementado
+- **Mensagens do login:** agora diferenciam e-mail não confirmado, usuário
+  bloqueado, excesso de tentativas e serviço indisponível. Senha errada
+  continua com a mensagem genérica. O código do erro vai para o log do
+  servidor, sem e-mail nem senha.
+- **E-mail com espaços ou maiúsculas:** é normalizado **antes** da
+  validação. Antes, um e-mail colado com espaço no fim era recusado no
+  login.
+- **Primeiro acesso (DP-28):**
+  - migration `20261026000900_first_access.sql` cria a lista
+    `authorized_emails` (só administradores leem; ninguém altera pela API);
+  - gatilho `before insert` em `auth.users`: só e-mail liberado e ainda não
+    usado vira conta;
+  - o perfil nasce liberado, com o papel e o nome da lista;
+  - excluir o usuário devolve o e-mail à lista como não usado;
+  - tela `/primeiro-acesso` (e-mail, nova senha, repetir senha) e link na
+    tela de login.
+- **Script de uso único** `docs/sql/primeiro-acesso-recomecar.sql`: passa
+  os usuários atuais para a lista, como administradores, e os apaga.
+- **Documentação:** README, guia de implantação e prompt do Cowork
+  atualizados. No Supabase, "Allow new users to sign up" fica ligado (a
+  lista é a trava) e "Confirm email" desligado.
+
+### Testes executados (resultados reais)
+- Vitest: 159 testes passando, incluindo:
+  - a trava do banco (fora da lista recusado, uso único, exclusão devolve o
+    e-mail);
+  - o acesso à lista;
+  - as mensagens e a validação de senha.
+- Playwright: o novo `first-access.spec.ts` passa no computador e no
+  celular (validação, e-mail fora da lista, criação, uso único e login com
+  a senha criada). A suíte completa está registrada no commit.
+- Script de recomeço executado no banco local dentro de uma transação
+  desfeita: passou os usuários para a lista, apagou-os e liberou os
+  e-mails.
+
+## Ajuste — Primeiro acesso sem perder dados (26/10/2026)
+
+O bloco que apaga os usuários falhou em produção com o erro 23503
+(`system_settings_updated_by_fkey`), porque os usuários antigos já tinham
+registros: configurações, pesquisas, ideias e empresas.
+
+- **Novo script** `docs/sql/primeiro-acesso-transferir.sql`, em três passos:
+  1. renomeia o usuário antigo para `antigo.<e-mail>`;
+  2. a pessoa faz o primeiro acesso;
+  3. os registros das 15 colunas que apontam para `profiles` passam para a
+     conta nova, e só então o usuário antigo é apagado.
+- **Guia de implantação:** a seção "Recomeçar os acessos" aponta para esse
+  script quando o erro aparece.
+
+### Testes executados (resultados reais)
+No banco local:
+- o mesmo erro 23503 se repetiu ao apagar um usuário dono de uma empresa;
+- passo 1, cadastro pela API de signup (200), passo 3;
+- a empresa passou para a conta nova;
+- o usuário antigo foi apagado;
+- o login com a senha nova voltou 200.

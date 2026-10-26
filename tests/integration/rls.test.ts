@@ -34,6 +34,8 @@ describe.skipIf(!databaseUrl)("RLS e funções de histórico", () => {
     try {
       const users: Users = { admin: randomUUID(), member: randomUUID(), inactive: randomUUID() };
       for (const [name, id] of Object.entries(users)) {
+        // Só e-mails liberados viram conta (primeiro acesso).
+        await client.query("insert into public.authorized_emails (email, role) values ($1, 'member')", [`${name}-${id}@teste.local`]);
         await client.query(
           `insert into auth.users (id, email, raw_user_meta_data, aud, role)
            values ($1, $2, jsonb_build_object('display_name', $3::text), 'authenticated', 'authenticated')`,
@@ -42,6 +44,7 @@ describe.skipIf(!databaseUrl)("RLS e funções de histórico", () => {
       }
       await client.query("update public.profiles set is_active = true, role = 'admin' where id = $1", [users.admin]);
       await client.query("update public.profiles set is_active = true where id = $1", [users.member]);
+      await client.query("update public.profiles set is_active = false where id = $1", [users.inactive]);
       await run(users);
     } finally {
       await client.query("rollback");
@@ -83,12 +86,42 @@ describe.skipIf(!databaseUrl)("RLS e funções de histórico", () => {
     return Number(rows[0].n);
   }
 
-  it("novo usuário do Auth recebe perfil inativo", async () => {
+  it("primeiro acesso: só e-mail liberado vira conta, uma vez, já liberado com o papel da lista", async () => {
+    await inTransaction(async () => {
+      const insertUser = (email: string) =>
+        errorCode("insert into auth.users (id, email, aud, role) values ($1, $2, 'authenticated', 'authenticated')", [randomUUID(), email]);
+      // Fora da lista: o banco recusa a conta.
+      expect(await insertUser("intruso@teste.local")).toBe("42501");
+
+      await client.query("insert into public.authorized_emails (email, role, display_name) values ('christian@teste.local', 'admin', 'Christian')");
+      const id = randomUUID();
+      await client.query("insert into auth.users (id, email, aud, role) values ($1, 'Christian@Teste.local', 'authenticated', 'authenticated')", [id]);
+      const profile = await client.query("select role, is_active, display_name from public.profiles where id = $1", [id]);
+      expect(profile.rows[0]).toEqual({ role: "admin", is_active: true, display_name: "Christian" });
+      const claimed = await client.query("select claimed_at is not null as claimed from public.authorized_emails where email = 'christian@teste.local'");
+      expect(claimed.rows[0].claimed).toBe(true);
+
+      // Uso único: o mesmo e-mail não cria uma segunda conta.
+      expect(await insertUser("christian@teste.local")).not.toBeNull();
+
+      // Excluir o usuário devolve o e-mail à lista para um novo primeiro acesso.
+      await client.query("delete from auth.users where id = $1", [id]);
+      const released = await client.query("select claimed_at from public.authorized_emails where email = 'christian@teste.local'");
+      expect(released.rows[0].claimed_at).toBeNull();
+      expect(await insertUser("christian@teste.local")).toBeNull();
+    });
+  });
+
+  it("lista de e-mails liberados: só administradores leem; ninguém altera pela API", async () => {
     await inTransaction(async (users) => {
-      const { rows } = await client.query("select role, is_active, display_name from public.profiles where id = $1", [
-        users.inactive,
-      ]);
-      expect(rows[0]).toEqual({ role: "member", is_active: false, display_name: "inactive" });
+      await as(users.member);
+      expect(await count("authorized_emails")).toBe(0);
+      expect(await errorCode("insert into public.authorized_emails (email) values ('x@teste.local')")).toBe("42501");
+      await as(users.admin);
+      expect(await count("authorized_emails")).toBeGreaterThanOrEqual(3);
+      expect(await errorCode("update public.authorized_emails set role = 'admin'")).toBe("42501");
+      await as(null);
+      expect(await errorCode("select * from public.authorized_emails")).toBe("42501");
     });
   });
 

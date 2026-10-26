@@ -8,7 +8,7 @@ import {
 import { parseCoordinatePair } from "@/domain/settings/geo";
 import type { InformationStatus } from "@/domain/types/information";
 
-import { BRAZIL_STATES, DUPLICATE_REASON_LABELS, type DuplicateReason } from "./options";
+import { BRAZIL_STATES, type DuplicateReason } from "./options";
 
 export { BRAZIL_STATES, DUPLICATE_REASON_LABELS, type DuplicateReason } from "./options";
 

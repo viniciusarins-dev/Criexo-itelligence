@@ -24,14 +24,16 @@ de 1 hora.
    O `db push` mostra as migrations de `supabase/migrations` e pede
    confirmação.
 3. Em **Authentication → Sign In / Providers**:
-   - desligue **Allow new users to sign up**;
-   - em **Email**, deixe a confirmação de e-mail ligada.
+   - deixe **Allow new users to sign up** ligado: só e-mails da lista de
+     liberados conseguem criar conta (a trava é no banco);
+   - em **Email**, desligue **Confirm email**, para a senha do primeiro
+     acesso valer na hora.
 4. Em **Authentication → Policies / Passwords**: senha mínima de 10
    caracteres, com letras e números.
 5. Em **Authentication → URL Configuration**, preencha **Site URL** com o
    endereço de produção (passo 2.4) e inclua-o em **Redirect URLs**.
-6. Crie os usuários (Christian e Vinicius) e libere o primeiro administrador,
-   como em README → "Usuários autorizados".
+6. Libere os e-mails do Christian e do Vinicius na lista (README → "Usuários
+   autorizados"). Cada um abre **/primeiro-acesso** e cria a própria senha.
 
 **Chaves:** a aplicação usa só a **URL do projeto** e a **chave
 publicável** (Project Settings → API). A chave `service_role` e a senha do
@@ -84,3 +86,29 @@ banco **nunca** vão para a Vercel nem para o código.
 - **Atualizações:** cada push no GitHub roda a CI
   (`.github/workflows/ci.yml`). Antes de publicar, rode as migrations novas
   com `db push`.
+
+## 5. Login não entra — o que verificar
+
+| O que aparece | Causa provável | Como resolver |
+|---|---|---|
+| "Este e-mail ainda não foi confirmado" | Usuário criado sem **Auto Confirm User** | Supabase → Authentication → Users → abrir o usuário → **Confirm email** (ou recriar com a caixa marcada) |
+| "E-mail ou senha incorretos." | Senha diferente da cadastrada, ou o usuário foi criado em outro projeto Supabase | Supabase → Users → **Send password recovery** ou redefinir a senha; conferir se a URL na Vercel é a deste projeto |
+| Tela "Configuração pendente" | Variáveis `NEXT_PUBLIC_SUPABASE_*` ausentes no build | Cadastrar na Vercel e fazer **Redeploy** (elas são embutidas no build) |
+| Entra, mas cai em "Acesso pendente" | Perfil não liberado | Rodar o `update public.profiles … is_active = true` do README com o e-mail exato |
+| Erro de servidor depois de entrar | Migrations não aplicadas (tabela `profiles` ausente) | Aplicar as migrations na ordem e conferir com a consulta de RLS do guia |
+
+O motivo exato de cada recusa aparece em Vercel → projeto → **Logs**, na linha
+"Falha no login" (só o código do erro, sem e-mail nem senha).
+
+### Recomeçar os acessos
+
+Se os usuários foram criados antes do primeiro acesso existir e não conseguem
+entrar, rode no SQL Editor, bloco por bloco, `docs/sql/primeiro-acesso-recomecar.sql`.
+Ele copia os e-mails atuais para a lista de liberados (como administradores) e
+apaga os usuários. Depois, cada pessoa cria a senha em **/primeiro-acesso**.
+
+Se o bloco que apaga os usuários falhar com `violates foreign key constraint`
+(erro 23503), esses usuários já criaram registros. Não apague nada: use
+`docs/sql/primeiro-acesso-transferir.sql`. Ele renomeia o usuário antigo,
+a pessoa faz o primeiro acesso com o e-mail de sempre, e os registros passam
+para a conta nova antes de o usuário antigo ser apagado.
