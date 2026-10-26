@@ -62,7 +62,9 @@ npx supabase@2.121.0 status       # mostra URL e chave publicável/anon
 
 Não há cadastro público. Para liberar alguém:
 
-1. Crie o usuário em **Authentication → Users → Add user** (e-mail e senha).
+1. Crie o usuário em **Authentication → Users → Add user** (e-mail e senha),
+   com **Auto Confirm User** marcado. Sem isso, o login recusa a senha certa
+   ("e-mail ainda não foi confirmado") até a pessoa clicar no link enviado.
    Um perfil **inativo** é criado automaticamente.
 2. Libere o **primeiro administrador** pelo SQL Editor:
    ```sql

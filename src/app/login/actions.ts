@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { safeRedirectPath, signInSchema } from "@/lib/validation/auth";
+import { safeRedirectPath, signInErrorMessage, signInSchema } from "@/lib/validation/auth";
 
 export type SignInState = {
   error?: string;
@@ -31,14 +31,9 @@ export async function signIn(_previous: SignInState, formData: FormData): Promis
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
 
   if (error) {
-    // Mensagem genérica: não revela se o e-mail existe.
-    const rateLimited = error.status === 429;
-    return {
-      email,
-      error: rateLimited
-        ? "Muitas tentativas. Aguarde alguns minutos e tente novamente."
-        : "E-mail ou senha incorretos.",
-    };
+    // Só o código vai para o log do servidor (Vercel → Logs); nunca e-mail ou senha.
+    console.error("Falha no login", { code: error.code ?? null, status: error.status ?? null });
+    return { email, error: signInErrorMessage(error) };
   }
 
   redirect(safeRedirectPath(formData.get("next")));

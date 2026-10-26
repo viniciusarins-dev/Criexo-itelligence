@@ -57,7 +57,7 @@ Em https://platform.openai.com/api-keys, me ajude a encontrar e **revogar** a ch
 ### 4. Configurar o login no Supabase
 1. **Authentication → Sign In / Providers:** desligue "Allow new users to sign up". Em Email, deixe a confirmação de e-mail ligada.
 2. **Senhas:** mínimo de 10 caracteres, exigindo letras e números.
-3. **Authentication → Users → Add user:** crie os usuários do Christian e do Vinicius. **Pergunte os e-mails** e deixe que eu digite as senhas.
+3. **Authentication → Users → Add user:** crie os usuários do Christian e do Vinicius. **Pergunte os e-mails** e deixe que eu digite as senhas. **Marque "Auto Confirm User"**; sem isso o login recusa a senha certa até a pessoa clicar no link de confirmação.
 4. No SQL Editor, libere os dois como administradores (troque pelos e-mails que eu informar):
    ```sql
    update public.profiles set is_active = true, role = 'admin'

@@ -30,8 +30,8 @@ de 1 hora.
    caracteres, com letras e números.
 5. Em **Authentication → URL Configuration**, preencha **Site URL** com o
    endereço de produção (passo 2.4) e inclua-o em **Redirect URLs**.
-6. Crie os usuários (Christian e Vinicius) e libere o primeiro administrador,
-   como em README → "Usuários autorizados".
+6. Crie os usuários (Christian e Vinicius) com **Auto Confirm User** marcado e
+   libere o primeiro administrador, como em README → "Usuários autorizados".
 
 **Chaves:** a aplicação usa só a **URL do projeto** e a **chave
 publicável** (Project Settings → API). A chave `service_role` e a senha do
@@ -84,3 +84,16 @@ banco **nunca** vão para a Vercel nem para o código.
 - **Atualizações:** cada push no GitHub roda a CI
   (`.github/workflows/ci.yml`). Antes de publicar, rode as migrations novas
   com `db push`.
+
+## 5. Login não entra — o que verificar
+
+| O que aparece | Causa provável | Como resolver |
+|---|---|---|
+| "Este e-mail ainda não foi confirmado" | Usuário criado sem **Auto Confirm User** | Supabase → Authentication → Users → abrir o usuário → **Confirm email** (ou recriar com a caixa marcada) |
+| "E-mail ou senha incorretos." | Senha diferente da cadastrada, ou o usuário foi criado em outro projeto Supabase | Supabase → Users → **Send password recovery** ou redefinir a senha; conferir se a URL na Vercel é a deste projeto |
+| Tela "Configuração pendente" | Variáveis `NEXT_PUBLIC_SUPABASE_*` ausentes no build | Cadastrar na Vercel e fazer **Redeploy** (elas são embutidas no build) |
+| Entra, mas cai em "Acesso pendente" | Perfil não liberado | Rodar o `update public.profiles … is_active = true` do README com o e-mail exato |
+| Erro de servidor depois de entrar | Migrations não aplicadas (tabela `profiles` ausente) | Aplicar as migrations na ordem e conferir com a consulta de RLS do guia |
+
+O motivo exato de cada recusa aparece em Vercel → projeto → **Logs**, na linha
+"Falha no login" (só o código do erro, sem e-mail nem senha).

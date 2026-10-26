@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { buildContentSecurityPolicy } from "@/lib/security/csp";
-import { safeRedirectPath } from "@/lib/validation/auth";
+import { safeRedirectPath, signInErrorMessage } from "@/lib/validation/auth";
 
 describe("redirecionamento após o login", () => {
   it("aceita caminhos internos", () => {
@@ -44,5 +44,18 @@ describe("Content Security Policy", () => {
     const csp = buildContentSecurityPolicy("abc", { isDev: true, isHttps: false });
     expect(csp).toContain("'unsafe-eval'");
     expect(csp).not.toContain("upgrade-insecure-requests");
+  });
+});
+
+describe("mensagens do login", () => {
+  it("diferencia e-mail não confirmado, excesso de tentativas e serviço fora do ar", () => {
+    expect(signInErrorMessage({ code: "email_not_confirmed", status: 400 })).toMatch(/ainda não foi confirmado/);
+    expect(signInErrorMessage({ code: "over_request_rate_limit", status: 429 })).toMatch(/Muitas tentativas/);
+    expect(signInErrorMessage({ status: 503 })).toMatch(/indisponível/);
+  });
+
+  it("senha errada e e-mail inexistente têm a mesma mensagem", () => {
+    expect(signInErrorMessage({ code: "invalid_credentials", status: 400 })).toBe("E-mail ou senha incorretos.");
+    expect(signInErrorMessage({})).toBe("E-mail ou senha incorretos.");
   });
 });
