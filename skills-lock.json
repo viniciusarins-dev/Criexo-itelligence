@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "orchestrator": {
+      "source": "nahisaho/musubi",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/orchestrator/SKILL.md",
+      "computedHash": "1d8b6e46e5c4594cde39271673feeedc31de9e032dbd02c2aef3091398300e3f"
+    }
+  }
+}

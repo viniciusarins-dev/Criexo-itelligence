@@ -580,3 +580,19 @@
 - Conferir o job de banco da CI na primeira execução no GitHub.
 - Revisão manual com leitor de tela antes do uso diário.
 - DP-27, DP-18, A-02 e A-03 continuam abertas.
+
+## Ferramentas de desenvolvimento: graphify e orchestrator (26/10/2026)
+
+Sem mudança no app nem nas regras de negócio; só configuração do Claude Code,
+trazida do projeto Cobranca-ipad.
+
+- **graphify** (`graphifyy[sql]` 0.9.95): grafo do código em `graphify-out/`
+  (1382 nós, 4026 arestas, incluindo as migrations SQL e os docs). Um hook de início de
+  sessão instala a CLI se faltar; hooks antes de Read/Glob/Grep/Bash lembram
+  de consultar o grafo e não fazem nada se a CLI não estiver instalada.
+- **orchestrator** (MUSUBI) em `.claude/skills/orchestrator/`, registrado em
+  `skills-lock.json`. Regras de uso em `CLAUDE.md`.
+
+### Testes executados (resultados reais)
+- `graphify update .` gerou o grafo sem erros; `graphify query` respondeu.
+- O script do hook de instalação rodou com a CLI já presente (sai sem fazer nada).

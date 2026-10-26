@@ -18,5 +18,40 @@
         "repo": "JuliusBrussee/caveman"
       }
     }
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/install-graphify.sh",
+            "timeout": 300
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -x /root/.local/bin/graphify ] && /root/.local/bin/graphify hook-guard search || true",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Read|Glob",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -x /root/.local/bin/graphify ] && /root/.local/bin/graphify hook-guard read || true",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
   }
 }
