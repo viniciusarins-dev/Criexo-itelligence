@@ -24,14 +24,16 @@ de 1 hora.
    O `db push` mostra as migrations de `supabase/migrations` e pede
    confirmação.
 3. Em **Authentication → Sign In / Providers**:
-   - desligue **Allow new users to sign up**;
-   - em **Email**, deixe a confirmação de e-mail ligada.
+   - deixe **Allow new users to sign up** ligado: só e-mails da lista de
+     liberados conseguem criar conta (a trava é no banco);
+   - em **Email**, desligue **Confirm email**, para a senha do primeiro
+     acesso valer na hora.
 4. Em **Authentication → Policies / Passwords**: senha mínima de 10
    caracteres, com letras e números.
 5. Em **Authentication → URL Configuration**, preencha **Site URL** com o
    endereço de produção (passo 2.4) e inclua-o em **Redirect URLs**.
-6. Crie os usuários (Christian e Vinicius) com **Auto Confirm User** marcado e
-   libere o primeiro administrador, como em README → "Usuários autorizados".
+6. Libere os e-mails do Christian e do Vinicius na lista (README → "Usuários
+   autorizados"). Cada um abre **/primeiro-acesso** e cria a própria senha.
 
 **Chaves:** a aplicação usa só a **URL do projeto** e a **chave
 publicável** (Project Settings → API). A chave `service_role` e a senha do
@@ -97,3 +99,10 @@ banco **nunca** vão para a Vercel nem para o código.
 
 O motivo exato de cada recusa aparece em Vercel → projeto → **Logs**, na linha
 "Falha no login" (só o código do erro, sem e-mail nem senha).
+
+### Recomeçar os acessos
+
+Se os usuários foram criados antes do primeiro acesso existir e não conseguem
+entrar, rode no SQL Editor, bloco por bloco, `docs/sql/primeiro-acesso-recomecar.sql`.
+Ele copia os e-mails atuais para a lista de liberados (como administradores) e
+apaga os usuários. Depois, cada pessoa cria a senha em **/primeiro-acesso**.

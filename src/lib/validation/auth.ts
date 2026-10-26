@@ -1,7 +1,14 @@
 import { z } from "zod";
 
+/** Tira espaços e maiúsculas antes de validar: e-mail colado com espaço no fim não pode ser recusado. */
+const emailField = z
+  .string({ error: "Informe um e-mail válido." })
+  .trim()
+  .toLowerCase()
+  .pipe(z.email({ error: "Informe um e-mail válido." }).max(254, { error: "Informe um e-mail válido." }));
+
 export const signInSchema = z.object({
-  email: z.email({ error: "Informe um e-mail válido." }).trim().toLowerCase().max(254),
+  email: emailField,
   password: z.string().min(1, { error: "Informe a senha." }).max(200),
 });
 
@@ -38,4 +45,37 @@ export function signInErrorMessage(error: { code?: string | null; status?: numbe
   if (error.code === "user_banned") return "Este usuário está bloqueado. Fale com o administrador.";
   if (error.status && error.status >= 500) return "O serviço de login está indisponível. Tente novamente em instantes.";
   return "E-mail ou senha incorretos.";
+}
+
+/** Primeiro acesso: o e-mail precisa estar liberado; a senha segue a política do Supabase (10+, letras e números). */
+export const firstAccessSchema = z
+  .object({
+    email: emailField,
+    password: z
+      .string()
+      .min(10, { error: "Use pelo menos 10 caracteres." })
+      .max(72, { error: "Use no máximo 72 caracteres." })
+      .regex(/[A-Za-z]/, { error: "Inclua pelo menos uma letra." })
+      .regex(/[0-9]/, { error: "Inclua pelo menos um número." }),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, { path: ["confirmPassword"], error: "As senhas não são iguais." });
+
+/** Mensagem do primeiro acesso a partir do erro do Supabase Auth. */
+export function firstAccessErrorMessage(error: { code?: string | null; status?: number | null }): string {
+  if (error.code === "user_already_exists" || error.code === "email_exists") {
+    return "Este e-mail já tem senha. Entre pela tela de login.";
+  }
+  if (error.code === "weak_password") return "Senha fraca: use pelo menos 10 caracteres, com letras e números.";
+  if (error.code === "signup_disabled") {
+    return "O primeiro acesso está desligado no Supabase. O administrador precisa ligar “Allow new users to sign up”.";
+  }
+  if (error.status === 429 || error.code === "over_request_rate_limit") {
+    return "Muitas tentativas. Aguarde alguns minutos e tente novamente.";
+  }
+  // A trava do banco recusa e-mails fora da lista; o Supabase devolve isso como erro 500 genérico.
+  if (error.code === "unexpected_failure" || (error.status && error.status >= 500)) {
+    return "Este e-mail não está liberado para acesso. Confira o endereço ou fale com o administrador.";
+  }
+  return "Não foi possível criar a senha. Tente novamente.";
 }

@@ -580,3 +580,46 @@
 - Conferir o job de banco da CI na primeira execução no GitHub.
 - Revisão manual com leitor de tela antes do uso diário.
 - DP-27, DP-18, A-02 e A-03 continuam abertas.
+
+## Ajuste — Primeiro acesso (26/10/2026)
+
+### Motivo
+Os dois usuários criados no Supabase não conseguiam entrar. O app mostrava
+"E-mail ou senha incorretos." para qualquer erro, inclusive "e-mail não
+confirmado", então não dava para saber a causa.
+
+### Implementado
+- **Mensagens do login:** agora diferenciam e-mail não confirmado, usuário
+  bloqueado, excesso de tentativas e serviço indisponível. Senha errada
+  continua com a mensagem genérica. O código do erro vai para o log do
+  servidor, sem e-mail nem senha.
+- **E-mail com espaços ou maiúsculas:** é normalizado **antes** da
+  validação. Antes, um e-mail colado com espaço no fim era recusado no
+  login.
+- **Primeiro acesso (DP-28):**
+  - migration `20261026000900_first_access.sql` cria a lista
+    `authorized_emails` (só administradores leem; ninguém altera pela API);
+  - gatilho `before insert` em `auth.users`: só e-mail liberado e ainda não
+    usado vira conta;
+  - o perfil nasce liberado, com o papel e o nome da lista;
+  - excluir o usuário devolve o e-mail à lista como não usado;
+  - tela `/primeiro-acesso` (e-mail, nova senha, repetir senha) e link na
+    tela de login.
+- **Script de uso único** `docs/sql/primeiro-acesso-recomecar.sql`: passa
+  os usuários atuais para a lista, como administradores, e os apaga.
+- **Documentação:** README, guia de implantação e prompt do Cowork
+  atualizados. No Supabase, "Allow new users to sign up" fica ligado (a
+  lista é a trava) e "Confirm email" desligado.
+
+### Testes executados (resultados reais)
+- Vitest: 159 testes passando, incluindo:
+  - a trava do banco (fora da lista recusado, uso único, exclusão devolve o
+    e-mail);
+  - o acesso à lista;
+  - as mensagens e a validação de senha.
+- Playwright: o novo `first-access.spec.ts` passa no computador e no
+  celular (validação, e-mail fora da lista, criação, uso único e login com
+  a senha criada). A suíte completa está registrada no commit.
+- Script de recomeço executado no banco local dentro de uma transação
+  desfeita: passou os usuários para a lista, apagou-os e liberou os
+  e-mails.

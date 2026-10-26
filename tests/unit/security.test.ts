@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { buildContentSecurityPolicy } from "@/lib/security/csp";
-import { safeRedirectPath, signInErrorMessage } from "@/lib/validation/auth";
+import { firstAccessErrorMessage, firstAccessSchema, safeRedirectPath, signInErrorMessage, signInSchema } from "@/lib/validation/auth";
 
 describe("redirecionamento após o login", () => {
   it("aceita caminhos internos", () => {
@@ -48,6 +48,11 @@ describe("Content Security Policy", () => {
 });
 
 describe("mensagens do login", () => {
+  it("aceita e-mail colado com espaços e maiúsculas", () => {
+    expect(signInSchema.parse({ email: "  Vinicius@Exemplo.com ", password: "x" }).email).toBe("vinicius@exemplo.com");
+    expect(signInSchema.safeParse({ email: "sem-arroba", password: "x" }).success).toBe(false);
+  });
+
   it("diferencia e-mail não confirmado, excesso de tentativas e serviço fora do ar", () => {
     expect(signInErrorMessage({ code: "email_not_confirmed", status: 400 })).toMatch(/ainda não foi confirmado/);
     expect(signInErrorMessage({ code: "over_request_rate_limit", status: 429 })).toMatch(/Muitas tentativas/);
@@ -57,5 +62,26 @@ describe("mensagens do login", () => {
   it("senha errada e e-mail inexistente têm a mesma mensagem", () => {
     expect(signInErrorMessage({ code: "invalid_credentials", status: 400 })).toBe("E-mail ou senha incorretos.");
     expect(signInErrorMessage({})).toBe("E-mail ou senha incorretos.");
+  });
+});
+
+describe("primeiro acesso", () => {
+  const valid = { email: " Christian@Exemplo.com ", password: "senhaforte123", confirmPassword: "senhaforte123" };
+
+  it("normaliza o e-mail e exige senha de 10+ caracteres com letras e números, repetida igual", () => {
+    expect(firstAccessSchema.parse(valid).email).toBe("christian@exemplo.com");
+    expect(firstAccessSchema.safeParse({ ...valid, password: "curta1", confirmPassword: "curta1" }).success).toBe(false);
+    expect(firstAccessSchema.safeParse({ ...valid, password: "semnumeroaqui", confirmPassword: "semnumeroaqui" }).success).toBe(false);
+    expect(firstAccessSchema.safeParse({ ...valid, password: "1234567890", confirmPassword: "1234567890" }).success).toBe(false);
+    const mismatch = firstAccessSchema.safeParse({ ...valid, confirmPassword: "outrasenha123" });
+    expect(mismatch.success).toBe(false);
+    expect(mismatch.error?.issues[0].path).toEqual(["confirmPassword"]);
+  });
+
+  it("explica cada recusa do Supabase", () => {
+    expect(firstAccessErrorMessage({ code: "user_already_exists", status: 422 })).toMatch(/já tem senha/);
+    expect(firstAccessErrorMessage({ code: "unexpected_failure", status: 500 })).toMatch(/não está liberado/);
+    expect(firstAccessErrorMessage({ code: "signup_disabled", status: 422 })).toMatch(/Allow new users to sign up/);
+    expect(firstAccessErrorMessage({ code: "weak_password", status: 422 })).toMatch(/Senha fraca/);
   });
 });
